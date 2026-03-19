@@ -6,6 +6,7 @@ venv/
 .DS_Store
 instance/
 *.db
+ngo.db
 
 # ML model & generated data (re-generate locally with train_model.py)
 ml_model/model.pkl
