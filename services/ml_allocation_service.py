@@ -25,10 +25,18 @@ def _load_model():
     global _payload, _model, _accuracy
     if _model is None:
         if not os.path.exists(_MODEL_PATH):
-            raise FileNotFoundError(
-                f"ML model not found at {_MODEL_PATH}. "
-                "Run: python ml_model/train_model.py"
-            )
+            print("ML model not found. Training now...")
+            try:
+                # Run the generation and training logic
+                from ml_model.generate_dataset import generate as gen_data
+                from ml_model.train_model import train as train_model
+                gen_data()
+                train_model()
+                print("ML model trained successfully during startup.")
+            except Exception as e:
+                print(f"Failed to auto-train ML model: {e}")
+                raise FileNotFoundError(f"ML model missing and auto-train failed: {e}")
+
         with open(_MODEL_PATH, "rb") as f:
             _payload = pickle.load(f)
         _model    = _payload["model"]

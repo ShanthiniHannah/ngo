@@ -61,10 +61,13 @@ def init_db(app):
         db.create_all()
         print("Database tables checked/created.")
 
-        # Seed basic roles if none exist
-        from models import Role
-        if not Role.query.first():
-            for r_name in ['Admin', 'HR', 'Employee', 'Donor', 'Volunteer', 'Beneficiary']:
-                db.session.add(Role(name=r_name))
-            db.session.commit()
-            print("Roles seeded.")
+        # Seed basic roles + 19 users if none exist
+        from models import User
+        if User.query.count() == 0:
+            print("No users found. Running auto-seed...")
+            try:
+                from seed_all_users import seed
+                seed(app_instance=app)
+            except Exception as e:
+                print(f"Auto-seed failed: {e}")
+

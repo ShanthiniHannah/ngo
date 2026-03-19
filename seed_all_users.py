@@ -11,10 +11,6 @@ Run once:
 Roles seeded:
   Admin, HR, Employee, Volunteer, Donor, Beneficiary
 """
-from dotenv import load_dotenv
-load_dotenv()
-
-from app import app
 from database import db
 from models import User, Role, Employee, Volunteer, Donor, Beneficiary
 from werkzeug.security import generate_password_hash
@@ -164,8 +160,15 @@ USERS = [
 ]
 
 
-def seed():
-    with app.app_context():
+def seed(app_instance=None):
+    if app_instance:
+        ctx = app_instance.app_context()
+    else:
+        # For standalone script
+        from app import app as standalone_app
+        ctx = standalone_app.app_context()
+
+    with ctx:
         role_map = {}
         for r in ['Admin', 'HR', 'Employee', 'Volunteer', 'Donor', 'Beneficiary']:
             role = Role.query.filter_by(name=r).first()
