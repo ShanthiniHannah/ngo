@@ -14,9 +14,15 @@ def init_db(app):
     database_url = os.getenv('DATABASE_URL', '')
 
     if database_url.startswith('sqlite'):
-        # ── SQLite mode (for PythonAnywhere / local dev without MySQL) ────────
+        # ── SQLite mode (Ensure path is ABSOLUTE for Render/PythonAnywhere consistency) ─
+        if ':///' not in database_url:
+            # Convert sqlite://ngo.db to sqlite:////abs/path/to/ngo.db
+            db_file = database_url.split('sqlite://')[-1]
+            abs_path = os.path.abspath(db_file)
+            database_url = f"sqlite:///{abs_path}"
+        
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-        print(f"Using SQLite: {database_url}")
+        print(f"DEBUG: Using SQLite absolute path: {database_url}")
 
     elif database_url.startswith('mysql'):
         # ── MySQL mode (for local WAMP / Railway) ─────────────────────────────
