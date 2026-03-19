@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models import SpiritualGrowth, User, ActivityLog
-from auth import token_required
+from .auth import token_required
 from helpers import log_activity
 from sqlalchemy import func
 

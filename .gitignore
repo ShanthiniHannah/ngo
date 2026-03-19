@@ -1,7 +1,18 @@
 __pycache__/
 *.py[cod]
 venv/
+.venv/
 .env
 .DS_Store
 instance/
 *.db
+
+# ML model & generated data (re-generate locally with train_model.py)
+ml_model/model.pkl
+ml_model/dataset.csv
+
+# Face recognition dataset
+dataset/
+
+# Uploaded photos
+static/uploads/

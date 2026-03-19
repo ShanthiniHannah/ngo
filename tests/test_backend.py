@@ -4,8 +4,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
 import json
-from app import app, db
-from models import Role, User
+from unittest.mock import patch
+
+_SQLITE_URI = 'sqlite:///:memory:'
+
+def _fake_init_db(flask_app):
+    from database import db
+    flask_app.config['SQLALCHEMY_DATABASE_URI'] = _SQLITE_URI
+    flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(flask_app)
+
+with patch('database.init_db', side_effect=_fake_init_db):
+    from app import app, db
+    from models import Role, User
 
 class TestBackend(unittest.TestCase):
     def setUp(self):

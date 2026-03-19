@@ -1,73 +1,74 @@
-import mysql.connector
-from database import DB_CONFIG
+"""
+seed_data.py — Populates the database with initial HR and Employee records.
+
+Usage:
+    python seed_data.py
+
+Make sure your .env file is configured and the Flask app context is available
+before running this script.
+"""
+from dotenv import load_dotenv
+load_dotenv()
+
+from app import app
+from database import db
+from models import User, Employee, Role
 from werkzeug.security import generate_password_hash
 
+
 def seed_data():
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-
-    try:
-        # Seed HRs
-        # Note: Password is 'password123'
+    with app.app_context():
+        # --- Seed HR Users ---
+        # Password for all seeded accounts is 'password123'
         password_hash = generate_password_hash('password123')
-        
-        hrs = [
-            ('Alice Admin', 'admin@company.com', 'Management', password_hash),
-            ('Bob Recruiter', 'bob@company.com', 'Recruitment', password_hash)
-        ]
-        
-        print("Seeding HRs...")
-        for hr in hrs:
-            try:
-                cursor.execute(
-                    "INSERT INTO hr (name, email, department, password) VALUES (%s, %s, %s, %s)", 
-                    hr
-                )
-            except mysql.connector.Error as err:
-                if err.errno == 1062: # Duplicate entry
-                    print(f"HR {hr[0]} already exists.")
-                else:
-                    raise err
 
-        conn.commit()
-        
-        # Get HR IDs for foreign keys
-        cursor.execute("SELECT id, name FROM hr")
-        hr_map = {name: id for id, name in cursor.fetchall()}
-        
-        if not hr_map:
-            print("No HRs found to link employees to.")
+        hr_role = Role.query.filter_by(name='HR').first()
+        if not hr_role:
+            print("ERROR: 'HR' role not found. Run the app once to seed roles first.")
             return
 
-        # Seed Employees
-        employees = [
-            ('John Doe', 30, 'Male', '123 Tech Park', 'Tech Corp', hr_map.get('Alice Admin')),
-            ('Jane Smith', 28, 'Female', '456 Design Ave', 'Creative Solutions', hr_map.get('Bob Recruiter')),
-            ('Mike Johnson', 35, 'Male', '789 Sales Blvd', 'Global Sales', hr_map.get('Alice Admin')),
-            ('Emily Chen', 26, 'Female', '321 Dev Lane', 'Innovate LLC', hr_map.get('Bob Recruiter'))
+        hr_users = [
+            {'name': 'Alice Admin',   'email': 'admin@company.com', 'role_id': hr_role.id, 'password': password_hash},
+            {'name': 'Bob Recruiter', 'email': 'bob@company.com',   'role_id': hr_role.id, 'password': password_hash},
         ]
 
-        print("Seeding Employees...")
-        for emp in employees:
-            # Check for duplicates by name (simple check for demo)
-            cursor.execute("SELECT id FROM employee WHERE name = %s", (emp[0],))
-            if cursor.fetchone():
-                print(f"Employee {emp[0]} already exists.")
-                continue
+        print("Seeding HR users...")
+        hr_map = {}  # name → User object, for linking employees below
+        for data in hr_users:
+            existing = User.query.filter_by(email=data['email']).first()
+            if existing:
+                print(f"  User '{data['name']}' already exists — skipping.")
+                hr_map[data['name']] = existing
+            else:
+                user = User(**data)
+                db.session.add(user)
+                db.session.flush()  # get user.id before commit
+                hr_map[data['name']] = user
+                print(f"  Created user '{data['name']}'.")
 
-            cursor.execute(
-                "INSERT INTO employee (name, age, gender, address, sponsor, hr_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                emp
-            )
+        db.session.commit()
 
-        conn.commit()
+        # --- Seed Employees ---
+        employees = [
+            {'name': 'John Doe',     'email': 'john@example.com',  'age': 30, 'gender': 'Male',   'address': '123 Tech Park',   'sponsor': 'Tech Corp',          'hr_id': hr_map['Alice Admin'].id},
+            {'name': 'Jane Smith',   'email': 'jane@example.com',  'age': 28, 'gender': 'Female', 'address': '456 Design Ave',  'sponsor': 'Creative Solutions', 'hr_id': hr_map['Bob Recruiter'].id},
+            {'name': 'Mike Johnson', 'email': 'mike@example.com',  'age': 35, 'gender': 'Male',   'address': '789 Sales Blvd',  'sponsor': 'Global Sales',       'hr_id': hr_map['Alice Admin'].id},
+            {'name': 'Emily Chen',   'email': 'emily@example.com', 'age': 26, 'gender': 'Female', 'address': '321 Dev Lane',    'sponsor': 'Innovate LLC',       'hr_id': hr_map['Bob Recruiter'].id},
+        ]
+
+        print("Seeding employees...")
+        for data in employees:
+            existing = Employee.query.filter_by(email=data['email']).first()
+            if existing:
+                print(f"  Employee '{data['name']}' already exists — skipping.")
+            else:
+                emp = Employee(**data)
+                db.session.add(emp)
+                print(f"  Created employee '{data['name']}'.")
+
+        db.session.commit()
         print("Database seeded successfully!")
-        
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-    finally:
-        cursor.close()
-        conn.close()
+
 
 if __name__ == '__main__':
     seed_data()

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from database import db
 from models import Sponsorship, Donor, Project
-from auth import token_required
+from .auth import token_required
 from helpers import log_activity
 import io
 

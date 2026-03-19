@@ -1,19 +1,24 @@
 from app import app, db
 from sqlalchemy import text
 
+def add_column_if_not_exists(conn, table, column, col_type):
+    try:
+        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+        conn.commit()
+        print(f"Added '{column}' column to {table}.")
+    except Exception as e:
+        print(f"Column '{column}' in {table} already exists or error: {e}")
+
 def fix():
     with app.app_context():
         try:
             with db.engine.connect() as conn:
-                # Check if column exists first? 
-                # Or just try to add it. If it fails (exists), catch error.
-                try:
-                    conn.execute(text("ALTER TABLE activity_logs ADD COLUMN details TEXT"))
-                    conn.commit()
-                    print("Added 'details' column to activity_logs.")
-                except Exception as e:
-                    print(f"Could not add column (maybe exists?): {e}")
-                    
+                add_column_if_not_exists(conn, 'activity_logs', 'details', 'TEXT')
+                add_column_if_not_exists(conn, 'employees', 'user_id', 'INT')
+                add_column_if_not_exists(conn, 'volunteers', 'user_id', 'INT')
+                add_column_if_not_exists(conn, 'donors', 'user_id', 'INT')
+                add_column_if_not_exists(conn, 'beneficiaries', 'email', 'VARCHAR(100)')
+                add_column_if_not_exists(conn, 'beneficiaries', 'phone', 'VARCHAR(20)')
         except Exception as e:
             print(f"Database connection error: {e}")
 

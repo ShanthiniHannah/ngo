@@ -6,16 +6,12 @@ db = SQLAlchemy()
 
 def init_db(app):
     """Initializes the database with the Flask app."""
-    # Configuration
-    DB_USER = os.getenv('DB_USER', 'root')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', '') # Make sure to set this in environment or .env
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_NAME = os.getenv('DB_NAME', 'hr_employee_db')
-    
-    # MySQL Configuration
-    # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
-    
-    # Check and create database if not exists
+    DB_USER     = os.getenv('DB_USER', 'root')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+    DB_HOST     = os.getenv('DB_HOST', 'localhost')
+    DB_NAME     = os.getenv('DB_NAME', 'hr_employee_db')
+
+    # Ensure the database exists before SQLAlchemy connects
     import mysql.connector
     try:
         conn = mysql.connector.connect(
@@ -24,30 +20,32 @@ def init_db(app):
             password=DB_PASSWORD
         )
         cursor = conn.cursor()
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}`")
         cursor.close()
         conn.close()
         print(f"Database '{DB_NAME}' checked/created successfully.")
     except Exception as e:
         print(f"Error creating database: {e}")
 
-    # Set MySQL URI
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+    )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
-    
+
     with app.app_context():
-        # Import models to ensure they are registered with SQLAlchemy
-        from models import Role, User, Employee, Donor, Volunteer, Beneficiary, Report, ActivityLog, Attendance, Leave, Project, Deliverable, Sponsorship, SpiritualGrowth
-        
-        # Create tables
+        # Importing the module registers all models with SQLAlchemy automatically.
+        # No need to list every model individually — new models are picked up for free.
+        import models  # noqa: F401
+
         db.create_all()
         print("Database tables checked/created.")
-        
-        # Seed basic roles if not exist
+
+        # Seed basic roles if none exist
+        from models import Role
         if not Role.query.first():
-            roles = ['Admin', 'HR', 'Employee', 'Donor', 'Volunteer']
+            roles = ['Admin', 'HR', 'Employee', 'Donor', 'Volunteer', 'Beneficiary']
             for r_name in roles:
                 db.session.add(Role(name=r_name))
             db.session.commit()
