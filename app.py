@@ -77,6 +77,24 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
+@app.route('/debug-db')
+def debug_db():
+    from models import User, Role
+    try:
+        user_count = User.query.count()
+        role_count = Role.query.count()
+        users = User.query.all()
+        user_list = [u.email for u in users]
+        return {
+            'status': 'success',
+            'user_count': user_count,
+            'role_count': role_count,
+            'users': user_list,
+            'db_uri': app.config.get('SQLALCHEMY_DATABASE_URI')
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}, 500
+
 if __name__ == '__main__':
     # FLASK_DEBUG=True only for local development — never set True in production
     app.run(debug=os.environ.get('FLASK_DEBUG', 'False') == 'True')
