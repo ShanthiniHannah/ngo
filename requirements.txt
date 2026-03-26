@@ -10,3 +10,5 @@ python-dotenv
 scikit-learn
 pandas
 requests
+Flask-Limiter
+psycopg2-binary
