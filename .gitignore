@@ -8,9 +8,9 @@ instance/
 *.db
 ngo.db
 
-# ML model & generated data (re-generate locally with train_model.py)
-ml_model/model.pkl
-ml_model/dataset.csv
+# ML model & generated data (included for deployment)
+# ml_model/model.pkl
+# ml_model/dataset.csv
 
 # Face recognition dataset
 dataset/
