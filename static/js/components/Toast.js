@@ -22,7 +22,7 @@ export default {
     data() {
         return {
             toasts: [],
-            icons: { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }
+            icons: { success: '', error: '', warning: '', info: '' }
         };
     },
     mounted() {

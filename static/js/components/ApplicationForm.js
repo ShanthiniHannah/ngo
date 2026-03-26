@@ -3,21 +3,21 @@ export default {
     <div class="apply-page">
         <div class="apply-hero">
             <div class="apply-hero-inner">
-                <div class="apply-logo">🌿</div>
+                <div class="apply-logo"></div>
                 <h1>Join Our Mission</h1>
-                <p>Apply to become a <strong>Volunteer</strong> or <strong>Donor</strong> member of our NGO community</p>
+                <p>Apply to become a <strong>Volunteer</strong> or <strong>Donor</strong> member of ArcMission community</p>
             </div>
         </div>
 
         <div class="apply-container" v-if="submitted">
             <div class="success-card glass-card">
-                <div class="success-icon">✅</div>
+                <div class="success-icon"></div>
                 <h2>Application Submitted!</h2>
                 <p>Thank you, <strong>{{ submittedName }}</strong>! Your application <strong>#{{ submittedId }}</strong> has been received.</p>
                 <div class="success-info">
-                    <p>📧 A confirmation email has been sent to <strong>{{ submittedEmail }}</strong></p>
-                    <p>📧 Check your inbox for an <strong>account activation link</strong> to set your password.</p>
-                    <p>⏱️ Our HR team will review your application within <strong>3–5 business days</strong> and schedule an interview.</p>
+                    <p>A confirmation email has been sent to <strong>{{ submittedEmail }}</strong></p>
+                    <p>Check your inbox for an <strong>account activation link</strong> to set your password.</p>
+                    <p>Our HR team will review your application within <strong>3–5 business days</strong> and schedule an interview.</p>
                 </div>
                 <button class="btn btn-primary" @click="$router.push('/login')">Back to Login</button>
             </div>
@@ -36,15 +36,15 @@ export default {
 
                 <!-- Step 0: Choose Type -->
                 <div v-if="currentStep === 0">
-                    <h2>🌟 How would you like to contribute?</h2>
+                    <h2>How would you like to contribute?</h2>
                     <p class="step-desc">Choose the type of membership you are applying for</p>
                     <div class="type-cards">
                         <div class="type-card" :class="{ selected: form.application_type === 'Volunteer' }" @click="form.application_type = 'Volunteer'">
-                            <div class="type-icon">🤝</div><h3>Volunteer</h3>
+                            <div class="type-icon">V</div><h3>Volunteer</h3>
                             <p>Contribute your time, skills and service to help our community projects and beneficiaries.</p>
                         </div>
                         <div class="type-card" :class="{ selected: form.application_type === 'Donor' }" @click="form.application_type = 'Donor'">
-                            <div class="type-icon">❤️</div><h3>Donor</h3>
+                            <div class="type-icon">D</div><h3>Donor</h3>
                             <p>Support our mission through financial contributions to fund projects, beneficiaries and operations.</p>
                         </div>
                     </div>
@@ -53,7 +53,7 @@ export default {
 
                 <!-- Step 1: Personal Information -->
                 <div v-if="currentStep === 1">
-                    <h2>👤 Personal Information</h2>
+                    <h2>Personal Information</h2>
                     <p class="step-desc">Basic details for identity verification</p>
                     <div class="form-group" style="margin-bottom:1.5rem;">
                         <label>Profile Photo <small style="color:#64748b;">(JPG/PNG, max 5MB)</small></label>
@@ -63,7 +63,7 @@ export default {
                             @drop.prevent="onPhotoDrop($event)" @click="$refs.photoInput.click()"
                             style="border:2px dashed #a5b4fc;border-radius:16px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(99,102,241,.04);">
                             <input ref="photoInput" type="file" accept="image/*" style="display:none" @change="onPhotoSelect">
-                            <div v-if="!photoPreview"><div style="font-size:2.5rem;">📷</div><p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag &amp; drop a photo here</p></div>
+                            <div v-if="!photoPreview"><div style="font-size:2.5rem;"></div><p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag &amp; drop a photo here</p></div>
                             <div v-else style="position:relative;display:inline-block;">
                                 <img :src="photoPreview" style="width:110px;height:110px;object-fit:cover;border-radius:50%;border:3px solid #6366f1;">
                                 <button type="button" @click.stop="removePhoto" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.8rem;">x</button>
@@ -104,7 +104,7 @@ export default {
 
                 <!-- Step 2: Background Details -->
                 <div v-if="currentStep === 2">
-                    <h2>📋 Background Details</h2>
+                    <h2>Background Details</h2>
                     <p class="step-desc">Help us understand your experience and suitability</p>
                     <div class="form-group"><label>Highest Education</label><input type="text" v-model="form.education" placeholder="e.g. B.Sc Computer Science, Madras University"></div>
                     <div class="form-group"><label>Work / Professional Experience</label><textarea v-model="form.work_experience" rows="2" placeholder="Describe your work history..."></textarea></div>
@@ -141,7 +141,7 @@ export default {
 
                 <!-- Step 3: Spiritual Life -->
                 <div v-if="currentStep === 3">
-                    <h2>✝️ Spiritual Life Assessment</h2>
+                    <h2>Spiritual Life Assessment</h2>
                     <p class="step-desc">As a faith-based NGO, we value spiritual integrity. Please answer honestly.</p>
                     <div class="form-group">
                         <label class="label-row">Are you a born-again Christian? *
@@ -172,19 +172,19 @@ export default {
                         <textarea v-model="form.personal_testimony" rows="3" placeholder="Share briefly about your faith journey and how you came to know Christ..."></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Why do you want to join this NGO? <span style="color:var(--primary-color)">*</span></label>
-                        <textarea v-model="form.reason_to_join" rows="3" placeholder="What motivates you to serve through this NGO?"></textarea>
+                        <label>Why do you want to join ArcMission? <span style="color:var(--primary-color)">*</span></label>
+                        <textarea v-model="form.reason_to_join" rows="3" placeholder="What motivates you to serve through ArcMission?"></textarea>
                     </div>
                     <div v-if="stepError" class="error-box">{{ stepError }}</div>
                 </div>
 
                 <!-- Step 4: Review & Submit -->
                 <div v-if="currentStep === 4">
-                    <h2>📄 Review & Confirm</h2>
+                    <h2>Review & Confirm</h2>
                     <p class="step-desc">Please review your details before submitting</p>
                     <div class="review-section">
                         <div class="review-badge" :class="form.application_type === 'Volunteer' ? 'badge-volunteer' : 'badge-donor'">
-                            {{ form.application_type === 'Volunteer' ? '🤝 Volunteer Application' : '❤️ Donor Application' }}
+                            {{ form.application_type === 'Volunteer' ? 'Volunteer Application' : 'Donor Application' }}
                         </div>
                     </div>
                     <div class="review-grid">
@@ -196,15 +196,15 @@ export default {
                         <div class="review-item"><span class="rl">Skills</span><span class="rv">{{ form.skills || '—' }}</span></div>
                     </div>
                     <div class="faith-statement">
-                        <div class="declaration-header">📜 Declaration & Statement of Agreement</div>
+                        <div class="declaration-header">Declaration & Statement of Agreement</div>
                         <ol class="declaration-list">
                             <li><strong>Truthfulness:</strong> I confirm that all information provided in this application is true, accurate and complete to the best of my knowledge.</li>
-                            <li><strong>Background Verification:</strong> I hereby give my consent to this NGO conducting a reasonable background check.</li>
+                            <li><strong>Background Verification:</strong> I hereby give my consent to ArcMission conducting a reasonable background check.</li>
                             <li><strong>Statement of Faith:</strong> I acknowledge that this is a Christ-centred, faith-based NGO and agree to uphold its values.</li>
                             <li><strong>Conduct & Commitment:</strong> I agree to serve with integrity, humility and a servant heart.</li>
                             <li><strong>Confidentiality:</strong> I agree to keep confidential any sensitive information about beneficiaries, donors, or internal operations.</li>
-                            <li><strong>Media & Communication:</strong> I consent to this NGO using my name and photographs for official publications unless I notify otherwise in writing.</li>
-                            <li><strong>Data Privacy:</strong> I understand that my personal data will be stored securely and used solely for this NGO's operations.</li>
+                            <li><strong>Media & Communication:</strong> I consent to ArcMission using my name and photographs for official publications unless I notify otherwise in writing.</li>
+                            <li><strong>Data Privacy:</strong> I understand that my personal data will be stored securely and used solely for ArcMission's operations.</li>
                         </ol>
                         <label class="faith-check-label" style="margin-top:1rem">
                             <input type="checkbox" v-model="form.agrees_to_statement">
@@ -223,7 +223,7 @@ export default {
                         {{ currentStep === 0 ? 'Start Application →' : 'Next →' }}
                     </button>
                     <button class="btn btn-primary" v-else @click="submitApplication" :disabled="submitting || !form.agrees_to_statement">
-                        {{ submitting ? 'Submitting...' : '✅ Submit Application' }}
+                        {{ submitting ? 'Submitting...' : 'Submit Application' }}
                     </button>
                 </div>
             </div>

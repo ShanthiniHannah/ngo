@@ -2,7 +2,7 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="card glass-card">
+    <div class="card glass-card page-fade-in">
         <div class="card-header">
             <h3>HR Management</h3>
             <div style="display: flex; gap: 1rem; align-items:center;">
@@ -15,7 +15,7 @@ export default {
 
         <!-- Attendance Section -->
         <div v-if="activeTab === 'attendance'">
-            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+            <div v-if="!isAdmin" style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
                 <button class="btn btn-primary" @click="checkIn">Check In</button>
                 <button class="btn btn-secondary" @click="checkOut">Check Out</button>
             </div>

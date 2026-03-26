@@ -5,7 +5,7 @@ export default {
     <div class="manager-page">
         <div class="page-header">
             <div>
-                <h2>🤝 {{ activeTab === 'volunteers' ? 'Volunteer Management' : 'Beneficiary Management' }}</h2>
+                <h2>{{ activeTab === 'volunteers' ? 'Volunteer Management' : 'Beneficiary Management' }}</h2>
                 <p class="page-subtitle">{{ activeTab === 'volunteers' ? 'Manage community volunteers' : 'Track beneficiaries and their needs' }}</p>
             </div>
             <button class="btn btn-primary" @click="openAdd" v-if="isAdminOrHR">+ Add {{ activeTab === 'volunteers' ? 'Volunteer' : 'Beneficiary' }}</button>
@@ -13,15 +13,15 @@ export default {
 
         <div class="tab-group">
             <button :class="activeTab === 'volunteers' ? 'tab-btn active' : 'tab-btn'" @click="activeTab='volunteers'">
-                🤝 Volunteers <span class="tab-count">{{ volunteers.length }}</span>
+                Volunteers <span class="tab-count">{{ volunteers.length }}</span>
             </button>
             <button :class="activeTab === 'beneficiaries' ? 'tab-btn active' : 'tab-btn'" @click="activeTab='beneficiaries'">
-                🌟 Beneficiaries <span class="tab-count">{{ beneficiaries.length }}</span>
+                Beneficiaries <span class="tab-count">{{ beneficiaries.length }}</span>
             </button>
         </div>
 
         <div class="search-bar">
-            <input v-model="search" type="text" placeholder="🔍  Search by name or skills..." class="search-input">
+            <input v-model="search" type="text" placeholder="Search by name or skills..." class="search-input">
         </div>
 
         <div v-if="loading" class="loading-state"><div class="spinner"></div> Loading...</div>
@@ -31,10 +31,10 @@ export default {
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Skills</th><th>Availability</th><th v-if="isAdminOrHR">Actions</th></tr>
+                        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Skills</th><th>Availability</th><th>Feedback</th><th v-if="isAdminOrHR">Actions</th></tr>
                     </thead>
                     <tbody>
-                        <tr v-if="filteredVols.length === 0"><td :colspan="isAdminOrHR?7:6" class="empty-row">No volunteers found</td></tr>
+                        <tr v-if="filteredVols.length === 0"><td :colspan="isAdminOrHR?8:7" class="empty-row">No volunteers found</td></tr>
                         <tr v-for="v in filteredVols" :key="v.id">
                             <td><span class="id-badge">#{{ v.id }}</span></td>
                             <td><strong>{{ v.name }}</strong></td>
@@ -45,10 +45,16 @@ export default {
                                 <span v-if="!v.skills">—</span>
                             </td>
                             <td>{{ v.availability || '—' }}</td>
+                            <td>
+                                <span v-if="ackSummaries[v.id]" class="avg-rating-badge">
+                                    ★ {{ ackSummaries[v.id].average_rating }} ({{ ackSummaries[v.id].total }})
+                                </span>
+                                <span v-else class="muted">No feedback</span>
+                            </td>
                             <td v-if="isAdminOrHR">
                                 <div class="action-btns">
-                                    <button class="btn btn-sm btn-secondary" @click="openEditVol(v)">✏️</button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteTarget={item:v,type:'volunteer'}">🗑️</button>
+                                    <button class="btn btn-sm btn-secondary" @click="openEditVol(v)">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @click="deleteTarget={item:v,type:'volunteer'}">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -75,19 +81,19 @@ export default {
                             <td><span :class="'status-badge status-' + (b.status||'pending').toLowerCase()">{{ b.status }}</span></td>
                             <td>{{ getVolName(b.assigned_volunteer_id) }}</td>
                             <td v-if="isAdminOrHR" class="muted-cell">
-                                <div v-if="b.email">✉️ {{ b.email }}</div>
-                                <div v-if="b.phone">📞 {{ b.phone }}</div>
+                                <div v-if="b.email">{{ b.email }}</div>
+                                <div v-if="b.phone">{{ b.phone }}</div>
                                 <span v-if="!b.email && !b.phone">—</span>
                             </td>
                             <td v-if="isAdminOrHR">
                                 <div class="action-btns">
                                     <template v-if="b.status === 'Pending'">
-                                        <button class="btn btn-sm" style="background:#d1fae5;color:#065f46;font-weight:600" @click="reviewBen(b, 'Approved')" title="Approve">✅ Approve</button>
-                                        <button class="btn btn-sm btn-danger" @click="openRejectBen(b)" title="Reject">❌ Reject</button>
+                                        <button class="btn btn-sm" style="background:#d1fae5;color:#065f46;font-weight:600" @click="reviewBen(b, 'Approved')" title="Approve">Approve</button>
+                                        <button class="btn btn-sm btn-danger" @click="openRejectBen(b)" title="Reject">Reject</button>
                                     </template>
-                                    <button class="btn btn-sm" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;" @click="aiAssign(b)" title="AI Assign Volunteer" :disabled="aiLoading">🤖 AI Assign</button>
-                                    <button class="btn btn-sm btn-secondary" @click="openEditBen(b)">✏️</button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteTarget={item:b,type:'beneficiary'}">🗑️</button>
+                                    <button class="btn btn-sm btn-ai-suggest" @click="getAiSuggestion(b)" title="Get AI Suggestion" :disabled="aiLoading">AI Suggest</button>
+                                    <button class="btn btn-sm btn-secondary" @click="openEditBen(b)">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @click="deleteTarget={item:b,type:'beneficiary'}">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -96,39 +102,78 @@ export default {
             </div>
         </div>
 
-        <!-- AI Allocation Result Panel -->
-        <div v-if="aiResult" class="card glass-card" style="margin-top:1.5rem;border:2px solid #8b5cf6;background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.05));">
-            <div style="padding:1.25rem;">
-                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
-                    <span style="font-size:1.75rem;">🤖</span>
+        <!-- ═══ AI SUGGESTION REVIEW PANEL ═══ -->
+        <div v-if="aiSuggestions.length > 0" class="ai-suggestions-panel card glass-card" style="margin-top:1.5rem;">
+            <div class="ai-panel-header">
+                <div class="ai-panel-title">
+                    <span class="ai-icon"></span>
                     <div>
-                        <h3 style="margin:0;color:#6366f1;font-size:1.1rem;font-weight:700;">AI Allocation Result</h3>
-                        <p style="margin:0;color:#64748b;font-size:0.85rem;">Powered by Decision Tree Classifier</p>
+                        <h3>AI Volunteer Suggestions</h3>
+                        <p>for <strong>{{ aiBeneficiaryName }}</strong> — Powered by Decision Tree Classifier</p>
                     </div>
-                    <button @click="aiResult=null" style="margin-left:auto;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8;">✕</button>
+                    <button @click="aiSuggestions=[];aiBeneficiaryName=''" class="ai-close-btn">✕</button>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
-                    <div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:1rem;text-align:center;">
-                        <p style="margin:0;font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Beneficiary</p>
-                        <p style="margin:0.25rem 0 0;font-size:1rem;font-weight:700;color:#1e293b;">{{ aiResult.beneficiary }}</p>
+                <div class="ai-meta-bar">
+                    <div class="ai-meta-item">
+                        <span class="ai-meta-label">Model Accuracy</span>
+                        <span class="ai-meta-value ai-accent">{{ aiAccuracy }}%</span>
                     </div>
-                    <div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:1rem;text-align:center;">
-                        <p style="margin:0;font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Volunteer Assigned</p>
-                        <p style="margin:0.25rem 0 0;font-size:1rem;font-weight:700;" :style="aiResult.volunteer ? 'color:#059669' : 'color:#ef4444'">{{ aiResult.volunteer || 'No match found' }}</p>
+                    <div class="ai-meta-item">
+                        <span class="ai-meta-label">Candidates</span>
+                        <span class="ai-meta-value">{{ aiSuggestions.length }}</span>
                     </div>
-                    <div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:1rem;text-align:center;">
-                        <p style="margin:0;font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Model Accuracy</p>
-                        <p style="margin:0.25rem 0 0;font-size:1.5rem;font-weight:800;color:#6366f1;">{{ aiResult.accuracy }}%</p>
+                    <div class="ai-meta-item">
+                        <span class="ai-meta-label">Decision Type</span>
+                        <span class="ai-meta-value">ML Suggestion</span>
                     </div>
-                    <div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:1rem;text-align:center;">
-                        <p style="margin:0;font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Decision Type</p>
-                        <p style="margin:0.25rem 0 0;font-size:0.9rem;font-weight:700;color:#8b5cf6;">{{ aiResult.decision_type }}</p>
-                    </div>
-                </div>
-                <div v-if="aiResult.message" style="margin-top:0.75rem;padding:0.6rem 1rem;background:rgba(99,102,241,0.1);border-radius:8px;color:#4338ca;font-size:0.875rem;">
-                    {{ aiResult.message }}
                 </div>
             </div>
+
+            <div class="ai-suggestions-grid">
+                <div v-for="(s, idx) in aiSuggestions" :key="s.id" class="suggestion-card" :class="{'suggestion-approved': s.status==='Approved', 'suggestion-rejected': s.status==='Rejected'}">
+                    <div class="suggestion-rank">#{{ idx + 1 }}</div>
+                    <div class="suggestion-body">
+                        <div class="suggestion-header">
+                            <h4>{{ s.volunteer_name }}</h4>
+                            <span class="score-badge" :class="s.score >= 5 ? 'score-high' : s.score >= 3 ? 'score-mid' : 'score-low'">
+                                Score: {{ s.score }}
+                            </span>
+                        </div>
+                        <div class="suggestion-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Skills</span>
+                                <span class="detail-value">
+                                    <span v-for="sk in (s.volunteer_skills || '').split(',').filter(Boolean)" :key="sk" class="skill-tag-sm">{{ sk.trim() }}</span>
+                                    <span v-if="!s.volunteer_skills" class="muted-cell">—</span>
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Availability</span>
+                                <span class="detail-value">{{ s.volunteer_availability || '—' }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-item">
+                                    <span class="detail-label">Skill Match</span>
+                                    <span class="detail-value" :style="s.skill_match ? 'color:#059669;font-weight:700' : 'color:#94a3b8'">{{ s.skill_match ? 'Yes' : '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Current Workload</span>
+                                    <span class="detail-value">{{ s.workload }} beneficiaries</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="suggestion-actions" v-if="s.status === 'Pending'">
+                            <button class="btn btn-sm btn-approve" @click="approveSuggestion(s)" :disabled="saving">Approve & Assign</button>
+                            <button class="btn btn-sm btn-reject-outline" @click="rejectSuggestion(s)" :disabled="saving">Reject</button>
+                        </div>
+                        <div v-else class="suggestion-status-badge">
+                            <span :class="s.status === 'Approved' ? 'status-badge status-approved' : 'status-badge status-rejected'">{{ s.status }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="aiMessage" class="ai-message">{{ aiMessage }}</div>
         </div>
 
         <!-- Add/Edit Volunteer Modal -->
@@ -205,7 +250,7 @@ export default {
             <div class="modal" v-if="rejectBen" style="display:flex;">
                 <div class="modal-content glass-card" style="max-width:420px;">
                     <span class="close" @click="rejectBen=null">&times;</span>
-                    <h2>❌ Reject Registration</h2>
+                    <h2>Reject Registration</h2>
                     <p>Reject the registration of <strong>{{ rejectBen.name }}</strong>?
                         <span v-if="rejectBen.email"> A notification will be sent to <strong>{{ rejectBen.email }}</strong>.</span>
                     </p>
@@ -244,8 +289,13 @@ export default {
             editingVol: null, editingBen: null, rejectBen: null, rejectReason: '',
             volForm: { name: '', email: '', phone: '', skills: '', availability: '' },
             benForm: { name: '', age: null, gender: '', needs: '', status: 'Pending', assigned_volunteer_id: null },
-            aiResult: null,
-            aiLoading: false
+            // AI Suggestion state (replaces old aiResult)
+            aiSuggestions: [],
+            aiBeneficiaryName: '',
+            aiAccuracy: null,
+            aiMessage: '',
+            aiLoading: false,
+            ackSummaries: {}
         };
     },
     computed: {
@@ -263,9 +313,19 @@ export default {
     methods: {
         async fetch() {
             this.loading = true;
-            try { const [v, b] = await Promise.all([axios.get('/volunteer'), axios.get('/beneficiary')]); this.volunteers = v.data; this.beneficiaries = b.data; }
+            try { const [v, b] = await Promise.all([axios.get('/volunteer'), axios.get('/beneficiary')]); this.volunteers = v.data; this.beneficiaries = b.data; this.fetchAckSummaries(); }
             catch (e) { window.toast('Failed to load data', 'error'); }
             finally { this.loading = false; }
+        },
+        async fetchAckSummaries() {
+            try {
+                for (const v of this.volunteers) {
+                    const res = await axios.get(`/acknowledgments/volunteer/${v.id}`);
+                    if (res.data.total > 0) {
+                        this.ackSummaries[v.id] = { average_rating: res.data.average_rating, total: res.data.total };
+                    }
+                }
+            } catch (e) { /* non-critical */ }
         },
         getVolName(id) { const v = this.volunteers.find(v => v.id === id); return v ? v.name : '—'; },
         firstLine(text) { if (!text) return '—'; const idx = text.indexOf('\n'); return idx > -1 ? text.substring(0, idx) : text; },
@@ -335,31 +395,65 @@ export default {
                 this.deleteTarget = null; this.fetch();
             } catch (e) { window.toast('Delete failed', 'error'); this.deleteTarget = null; }
         },
-        async aiAssign(beneficiary) {
+
+        // ═══════════════════════════════════════════════════════════
+        // AI SUGGESTION WORKFLOW (replaces old aiAssign)
+        // ═══════════════════════════════════════════════════════════
+        async getAiSuggestion(beneficiary) {
             this.aiLoading = true;
-            this.aiResult = null;
+            this.aiSuggestions = [];
+            this.aiBeneficiaryName = beneficiary.name;
+            this.aiMessage = '';
+            this.aiAccuracy = null;
             try {
-                const res = await axios.post(`/ai-assign/${beneficiary.id}`);
-                this.aiResult = {
-                    beneficiary  : beneficiary.name,
-                    volunteer    : res.data.volunteer,
-                    accuracy     : res.data.accuracy,
-                    decision_type: res.data.decision_type,
-                    message      : res.data.message
-                };
-                if (res.data.volunteer) {
-                    window.toast(`🤖 AI assigned ${res.data.volunteer} to ${beneficiary.name}`, 'success');
-                    this.fetch();
+                const res = await axios.post(`/ai-suggest/${beneficiary.id}`);
+                this.aiSuggestions = res.data.suggestions || [];
+                this.aiAccuracy    = res.data.accuracy;
+                this.aiMessage     = res.data.message;
+                if (this.aiSuggestions.length > 0) {
+                    window.toast(`${this.aiSuggestions.length} volunteer suggestions generated for ${beneficiary.name}`, 'success');
                 } else {
-                    window.toast('No suitable volunteer found by AI', 'info');
+                    window.toast('No suitable volunteers found by AI', 'info');
                 }
             } catch (e) {
-                const msg = e.response?.data?.error || 'AI assignment failed';
+                const msg = e.response?.data?.error || 'AI suggestion failed';
                 window.toast(msg, 'error');
-                // Show error in panel
-                this.aiResult = { beneficiary: beneficiary.name, volunteer: null, accuracy: '—', decision_type: 'Machine Learning', message: msg };
+                this.aiMessage = msg;
             } finally {
                 this.aiLoading = false;
+            }
+        },
+
+        async approveSuggestion(suggestion) {
+            this.saving = true;
+            try {
+                const res = await axios.post(`/ai-suggestions/${suggestion.id}/approve`);
+                window.toast(`${res.data.volunteer_name} assigned to ${this.aiBeneficiaryName}`, 'success');
+                // Update local state
+                suggestion.status = 'Approved';
+                this.aiSuggestions.forEach(s => {
+                    if (s.id !== suggestion.id && s.status === 'Pending') {
+                        s.status = 'Rejected';
+                    }
+                });
+                this.fetch(); // Refresh table data
+            } catch (e) {
+                window.toast(e.response?.data?.error || 'Approval failed', 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async rejectSuggestion(suggestion) {
+            this.saving = true;
+            try {
+                await axios.post(`/ai-suggestions/${suggestion.id}/reject`, { reason: 'Rejected by HR' });
+                suggestion.status = 'Rejected';
+                window.toast('Suggestion rejected', 'info');
+            } catch (e) {
+                window.toast(e.response?.data?.error || 'Rejection failed', 'error');
+            } finally {
+                this.saving = false;
             }
         }
     }

@@ -21,6 +21,8 @@ class User(db.Model):
     password   = db.Column(db.String(255), nullable=False)
     role_id    = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    locked_until          = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -58,6 +60,7 @@ class Donor(db.Model):
     phone              = db.Column(db.String(20))
     address            = db.Column(db.String(255))
     donation_amount    = db.Column(db.Float, default=0.0)
+    transaction_id     = db.Column(db.String(100), nullable=True)
     last_donation_date = db.Column(db.DateTime)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
     user_id            = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
@@ -93,6 +96,7 @@ class Beneficiary(db.Model):
     status               = db.Column(db.String(50), default='Pending')
     assigned_volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=True)
     photo_filename       = db.Column(db.String(255), nullable=True)
+    document_path        = db.Column(db.String(255), nullable=True)
     created_at           = db.Column(db.DateTime, default=datetime.utcnow)
 
     volunteer = db.relationship('Volunteer', backref='beneficiaries', lazy=True)
@@ -119,6 +123,7 @@ class ActivityLog(db.Model):
     user_id   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     action    = db.Column(db.String(255), nullable=False)
     details   = db.Column(db.Text, nullable=True)
+    ip_address= db.Column(db.String(45), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
@@ -270,6 +275,48 @@ class Application(db.Model):
 
     def __repr__(self):
         return f'<Application {self.full_name} ({self.application_type})>'
+
+
+class AllocationSuggestion(db.Model):
+    """ML-generated volunteer suggestion for HR to review before final assignment."""
+    __tablename__ = 'allocation_suggestions'
+    id               = db.Column(db.Integer, primary_key=True)
+    beneficiary_id   = db.Column(db.Integer, db.ForeignKey('beneficiaries.id'), nullable=False)
+    volunteer_id     = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
+    score            = db.Column(db.Float)            # ML confidence/match score
+    skill_match      = db.Column(db.Boolean, default=False)
+    workload         = db.Column(db.Integer)           # volunteer's current beneficiary count
+    status           = db.Column(db.String(20), default='Pending')  # Pending/Approved/Rejected
+    reason           = db.Column(db.Text, nullable=True)            # HR reason for rejection
+    suggested_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_by      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    reviewed_at      = db.Column(db.DateTime, nullable=True)
+
+    beneficiary = db.relationship('Beneficiary', backref='suggestions')
+    volunteer   = db.relationship('Volunteer', backref='allocation_suggestions')
+    reviewer    = db.relationship('User', backref='allocation_reviews')
+
+    def __repr__(self):
+        return f'<AllocationSuggestion vol={self.volunteer_id}→ben={self.beneficiary_id} {self.status}>'
+
+
+class ServiceAcknowledgment(db.Model):
+    """Beneficiary feedback on assigned volunteer's service quality."""
+    __tablename__ = 'service_acknowledgments'
+    id               = db.Column(db.Integer, primary_key=True)
+    beneficiary_id   = db.Column(db.Integer, db.ForeignKey('beneficiaries.id'), nullable=False)
+    volunteer_id     = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
+    rating           = db.Column(db.Integer, nullable=False)           # 1-5
+    feedback         = db.Column(db.Text, nullable=True)
+    service_type     = db.Column(db.String(100), nullable=True)        # e.g. "Food & Nutrition"
+    status           = db.Column(db.String(30), default='Satisfied')   # Satisfied / Needs Improvement
+    acknowledged_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    beneficiary = db.relationship('Beneficiary', backref='acknowledgments')
+    volunteer   = db.relationship('Volunteer', backref='acknowledgments')
+
+    def __repr__(self):
+        return f'<ServiceAcknowledgment ben={self.beneficiary_id}→vol={self.volunteer_id} {self.status}>'
 
 
 class OtpVerification(db.Model):

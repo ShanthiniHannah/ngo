@@ -4,14 +4,13 @@ export default {
     template: `
     <div class="portal-wrapper">
         <div class="portal-header">
-            <h1>👤 My Profile</h1>
+            <h1>My Profile</h1>
             <p class="subtitle">{{ user.name }} — {{ user.role }}</p>
         </div>
 
         <div class="portal-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
             <!-- Account Info -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">🔐</div>
                 <h3>Account Information</h3>
                 <p><strong>Name:</strong> {{ user.name }}</p>
                 <p><strong>Email:</strong> {{ user.email }}</p>
@@ -21,7 +20,6 @@ export default {
 
             <!-- Role-specific profile details -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">{{ roleIcon }}</div>
                 <h3>{{ roleLabel }} Details</h3>
                 <div v-if="profile">
                     <template v-for="(val, key) in profile" :key="key">
@@ -43,8 +41,8 @@ export default {
     },
     computed: {
         roleIcon() {
-            const icons = { Admin: '👑', HR: '📋', Employee: '🧑‍💼', Volunteer: '🤝', Donor: '❤️', Beneficiary: '🌟' };
-            return icons[this.user?.role] || '👤';
+            const icons = { Admin: '', HR: '', Employee: '', Volunteer: '', Donor: '', Beneficiary: '' };
+            return icons[this.user?.role] || '';
         },
         roleLabel() {
             return this.user?.role || '';

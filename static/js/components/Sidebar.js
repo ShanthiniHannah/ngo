@@ -6,9 +6,9 @@ export default {
         <div class="sidebar-header">
             <div class="logo-container" @click="toggleCollapse" title="Toggle Sidebar">
                  <img src="/static/img/logo.png" alt="NGO" class="sidebar-logo">
-                 <span class="brand-name" v-if="!collapsed">NGO Manager</span>
-                 <span v-if="!collapsed" style="margin-left: auto; font-size: 1.2rem; color: var(--primary-color);">◀</span>
-                 <span v-else style="margin: 0 auto; font-size: 1.2rem; color: var(--primary-color);">▶</span>
+                 <span class="brand-name" v-if="!collapsed">ArcMission</span>
+                 <span v-if="!collapsed" class="toggle-icon"><i data-lucide="chevron-left"></i></span>
+                 <span v-else class="toggle-icon"><i data-lucide="chevron-right"></i></span>
             </div>
         </div>
 
@@ -22,43 +22,43 @@ export default {
             <!-- ── MASTER / ADMIN ──────────────────────── -->
             <template v-if="isAdmin">
                 <router-link to="/" class="nav-item" active-class="active" exact>
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">Dashboard</span>
                 </router-link>
                 <router-link to="/hr" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon" style="font-size:.65rem;font-weight:800;">HR</span>
+                    <span class="icon"><i data-lucide="users"></i></span>
                     <span class="label" v-if="!collapsed">HR Management</span>
                 </router-link>
                 <router-link to="/employee" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">E</span>
+                    <span class="icon"><i data-lucide="briefcase"></i></span>
                     <span class="label" v-if="!collapsed">Employees</span>
                 </router-link>
                 <router-link to="/volunteer" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">V</span>
+                    <span class="icon"><i data-lucide="heart-handshake"></i></span>
                     <span class="label" v-if="!collapsed">Volunteers</span>
                 </router-link>
                 <router-link to="/donor" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Do</span>
+                    <span class="icon"><i data-lucide="hand-coins"></i></span>
                     <span class="label" v-if="!collapsed">Donors</span>
                 </router-link>
                 <router-link to="/projects" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">P</span>
+                    <span class="icon"><i data-lucide="folder-kanban"></i></span>
                     <span class="label" v-if="!collapsed">Projects</span>
                 </router-link>
                 <router-link to="/finance" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">F</span>
+                    <span class="icon"><i data-lucide="wallet"></i></span>
                     <span class="label" v-if="!collapsed">Finance</span>
                 </router-link>
                 <router-link to="/analytics" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">An</span>
+                    <span class="icon"><i data-lucide="bar-chart-3"></i></span>
                     <span class="label" v-if="!collapsed">Analytics</span>
                 </router-link>
                 <router-link to="/activity_logs" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">L</span>
+                    <span class="icon"><i data-lucide="scroll-text"></i></span>
                     <span class="label" v-if="!collapsed">Activity Logs</span>
                 </router-link>
                 <router-link to="/applications" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Ap</span>
+                    <span class="icon"><i data-lucide="file-text"></i></span>
                     <span class="label" v-if="!collapsed">Applications
                         <span class="nav-badge" v-if="!collapsed && pendingCount > 0">{{ pendingCount }}</span>
                     </span>
@@ -68,39 +68,39 @@ export default {
             <!-- ── HR ──────────────────────────────────── -->
             <template v-else-if="isHR">
                 <router-link to="/" class="nav-item" active-class="active" exact>
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">Dashboard</span>
                 </router-link>
                 <router-link to="/hr" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon" style="font-size:.65rem;font-weight:800;">AL</span>
+                    <span class="icon"><i data-lucide="calendar-check"></i></span>
                     <span class="label" v-if="!collapsed">Attendance & Leave</span>
                 </router-link>
                 <router-link to="/employee" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">E</span>
+                    <span class="icon"><i data-lucide="briefcase"></i></span>
                     <span class="label" v-if="!collapsed">Employees</span>
                 </router-link>
                 <router-link to="/volunteer" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">V</span>
+                    <span class="icon"><i data-lucide="heart-handshake"></i></span>
                     <span class="label" v-if="!collapsed">Volunteers</span>
                 </router-link>
                 <router-link to="/donor" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Do</span>
+                    <span class="icon"><i data-lucide="hand-coins"></i></span>
                     <span class="label" v-if="!collapsed">Donors</span>
                 </router-link>
                 <router-link to="/projects" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">P</span>
+                    <span class="icon"><i data-lucide="folder-kanban"></i></span>
                     <span class="label" v-if="!collapsed">Projects</span>
                 </router-link>
                 <router-link to="/finance" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">F</span>
+                    <span class="icon"><i data-lucide="wallet"></i></span>
                     <span class="label" v-if="!collapsed">Finance</span>
                 </router-link>
                 <router-link to="/applications" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Ap</span>
+                    <span class="icon"><i data-lucide="file-text"></i></span>
                     <span class="label" v-if="!collapsed">Applications</span>
                 </router-link>
                 <router-link to="/my-profile" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Me</span>
+                    <span class="icon"><i data-lucide="circle-user"></i></span>
                     <span class="label" v-if="!collapsed">My Profile</span>
                 </router-link>
             </template>
@@ -108,15 +108,15 @@ export default {
             <!-- ── EMPLOYEE ─────────────────────────────── -->
             <template v-else-if="isEmployee">
                 <router-link to="/employee-portal" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">My Dashboard</span>
                 </router-link>
                 <router-link to="/projects" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">P</span>
+                    <span class="icon"><i data-lucide="folder-kanban"></i></span>
                     <span class="label" v-if="!collapsed">Projects</span>
                 </router-link>
                 <router-link to="/my-profile" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Me</span>
+                    <span class="icon"><i data-lucide="circle-user"></i></span>
                     <span class="label" v-if="!collapsed">My Profile</span>
                 </router-link>
             </template>
@@ -124,15 +124,15 @@ export default {
             <!-- ── VOLUNTEER ────────────────────────────── -->
             <template v-else-if="isVolunteer">
                 <router-link to="/volunteer-portal" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">My Dashboard</span>
                 </router-link>
                 <router-link to="/projects" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">P</span>
+                    <span class="icon"><i data-lucide="folder-kanban"></i></span>
                     <span class="label" v-if="!collapsed">View Projects</span>
                 </router-link>
                 <router-link to="/my-profile" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Me</span>
+                    <span class="icon"><i data-lucide="circle-user"></i></span>
                     <span class="label" v-if="!collapsed">My Profile</span>
                 </router-link>
             </template>
@@ -140,15 +140,15 @@ export default {
             <!-- ── DONOR ────────────────────────────────── -->
             <template v-else-if="isDonor">
                 <router-link to="/donor-portal" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">My Dashboard</span>
                 </router-link>
                 <router-link to="/projects" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">P</span>
+                    <span class="icon"><i data-lucide="folder-kanban"></i></span>
                     <span class="label" v-if="!collapsed">Funded Projects</span>
                 </router-link>
                 <router-link to="/my-profile" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Me</span>
+                    <span class="icon"><i data-lucide="circle-user"></i></span>
                     <span class="label" v-if="!collapsed">My Profile</span>
                 </router-link>
             </template>
@@ -156,11 +156,11 @@ export default {
             <!-- ── BENEFICIARY ──────────────────────────── -->
             <template v-else-if="isBeneficiary">
                 <router-link to="/beneficiary-portal" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">D</span>
+                    <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="label" v-if="!collapsed">My Dashboard</span>
                 </router-link>
                 <router-link to="/my-profile" class="nav-item" active-class="active">
-                    <span class="icon nav-letter-icon">Me</span>
+                    <span class="icon"><i data-lucide="circle-user"></i></span>
                     <span class="label" v-if="!collapsed">My Profile</span>
                 </router-link>
             </template>
@@ -176,7 +176,8 @@ export default {
                 </div>
             </div>
             <button @click="handleLogout" class="logout-btn" :title="collapsed ? 'Logout' : ''">
-                <span class="label">Logout</span>
+                <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+                <span class="label" v-if="!collapsed">Logout</span>
             </button>
         </div>
     </aside>
@@ -196,6 +197,16 @@ export default {
         if (this.user && ['Admin', 'HR'].includes(this.user.role)) {
             this.fetchPendingCount();
         }
+        // Initialize Lucide icons after DOM renders
+        this.$nextTick(() => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
+    },
+    updated() {
+        // Re-render icons when sidebar expands/collapses or route changes
+        this.$nextTick(() => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
     },
     methods: {
         toggleCollapse() { this.$emit('toggle-sidebar'); },

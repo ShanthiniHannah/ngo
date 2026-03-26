@@ -19,9 +19,9 @@ export default {
             <!-- LEFT: Branding -->
             <div class="lp-left">
                 <div class="lp-brand-wrap">
-                    <div class="lp-leaf">🌿</div>
-                    <h1 class="lp-title">HopeBase</h1>
-                    <p class="lp-tagline">Empowering Communities<br>One Connection at a Time</p>
+                    <div class="lp-leaf"></div>
+                    <h1 class="lp-title">ArcMission</h1>
+                    <p class="lp-tagline">"For we are God's handiwork, created in Christ Jesus to do good works."<br>— Ephesians 2:10</p>
                 </div>
                 <div class="lp-roles">
                     <div class="lpr-chip role-admin">Admin</div>
@@ -37,6 +37,7 @@ export default {
                     <router-link to="/apply/beneficiary" class="lp-apply-btn" style="margin-top:10px; background: linear-gradient(135deg,#f59e0b,#ef4444);">Register as Beneficiary</router-link>
                 </div>
             </div>
+
 
             <!-- RIGHT: Form Area -->
             <div class="lp-right">
@@ -148,7 +149,7 @@ export default {
                 <div class="lp-form-panel" v-else-if="view === 'set-password'">
                     <div class="lp-form-header">
                         <div class="lp-fp-icon">&#127881;</div>
-                        <h2>Welcome to HopeBase!</h2>
+                        <h2>Welcome to ArcMission!</h2>
                         <p>Please set a password to activate your account.</p>
                     </div>
                     <form @submit.prevent="handleSetPassword">

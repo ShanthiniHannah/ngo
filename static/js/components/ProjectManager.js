@@ -2,10 +2,10 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="manager-page">
+    <div class="manager-page page-fade-in">
         <div class="page-header">
             <div>
-                <h2>🚀 Project Management</h2>
+                <h2>Project Management</h2>
                 <p class="page-subtitle">Track projects, timelines, budgets and deliverables</p>
             </div>
             <div style="display:flex;gap:0.75rem;">
@@ -18,7 +18,7 @@ export default {
         </div>
 
         <div class="search-bar">
-            <input v-model="search" type="text" placeholder="🔍  Search projects..." class="search-input">
+            <input v-model="search" type="text" placeholder="Search projects..." class="search-input">
         </div>
 
         <!-- Stats -->
@@ -47,11 +47,11 @@ export default {
 
                 <div class="project-meta">
                     <div class="meta-item">
-                        <span class="meta-icon">💰</span>
+                        <span class="meta-label">Budget:</span>
                         <span>Rs.{{ (p.budget || 0).toLocaleString() }}</span>
                     </div>
                     <div class="meta-item">
-                        <span class="meta-icon">📅</span>
+                        <span class="meta-label">Timeline:</span>
                         <span>{{ p.start_date || 'N/A' }} → {{ p.end_date || 'N/A' }}</span>
                     </div>
                 </div>
@@ -79,11 +79,11 @@ export default {
 
                 <div class="project-actions" v-if="isAdminOrHR">
                     <button class="btn btn-sm btn-secondary" @click="openDeliverableModal(p)">+ Deliverable</button>
-                    <button class="btn btn-sm btn-secondary" @click="openEdit(p)">✏️ Edit</button>
+                    <button class="btn btn-sm btn-secondary" @click="openEdit(p)">Edit</button>
                     <select class="status-select" :value="p.status" @change="changeStatus(p, $event.target.value)">
                         <option>Planned</option><option>In Progress</option><option>Completed</option>
                     </select>
-                    <button class="btn btn-sm btn-danger" @click="deleteTarget=p">🗑️</button>
+                    <button class="btn btn-sm btn-danger" @click="deleteTarget=p">Delete</button>
                 </div>
             </div>
         </div>

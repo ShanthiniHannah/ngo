@@ -7,10 +7,37 @@ export default {
         
         <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
             
-            <!-- Spiritual Growth Section -->
+            <!-- Donation Trends Section -->
+            <div class="card glass-card">
+                <h3>Donation Trends ({{ currentYear }})</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Monthly sponsorship volume</p>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="donationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Beneficiary Growth Section -->
+            <div class="card glass-card">
+                <h3>Beneficiary Demographics</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Distribution by current status</p>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="beneficiaryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Volunteer Activity Section -->
+            <div class="card glass-card">
+                <h3>Volunteer Growth ({{ currentYear }})</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">New volunteers onboarding over time</p>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="volunteerChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Spiritual Growth Section (Legacy) -->
             <div class="card glass-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3>Spiritual Growth</h3>
+                    <h3>Spiritual Impact</h3>
                     <button class="btn btn-sm btn-primary" @click="showLogModal = true">Log Activity</button>
                 </div>
                 
@@ -27,15 +54,6 @@ export default {
                 </ul>
             </div>
 
-            <!-- Performance Section -->
-            <div class="card glass-card">
-                <h3>Performance Metrics</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">System activity overview</p>
-                
-                <div style="height: 300px; position: relative;">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-            </div>
         </div>
 
         <!-- Log Modal -->
@@ -83,9 +101,13 @@ export default {
             activityStats: [],
             showLogModal: false,
             newLog: { activity_type: 'Prayer', duration: 30, notes: '', date: new Date().toISOString().split('T')[0] },
+            currentYear: new Date().getFullYear(),
+            chartsData: null,
             charts: {
                 spiritual: null,
-                performance: null
+                donation: null,
+                beneficiary: null,
+                volunteer: null
             }
         }
     },
@@ -96,9 +118,14 @@ export default {
     methods: {
         async fetchAnalytics() {
             try {
-                const response = await axios.get('/analytics/performance');
-                this.activityStats = response.data.activity_stats;
-                this.spiritualStats = response.data.spiritual_stats;
+                const [perfRes, dashRes] = await Promise.all([
+                    axios.get('/analytics/performance'),
+                    axios.get('/analytics/dashboard-charts')
+                ]);
+                this.activityStats = perfRes.data.activity_stats;
+                this.spiritualStats = perfRes.data.spiritual_stats;
+                this.chartsData = dashRes.data;
+                this.currentYear = dashRes.data.year;
                 this.renderCharts();
             } catch (error) { console.error("Error fetching analytics", error); }
         },
@@ -118,60 +145,81 @@ export default {
             } catch (error) { alert('Failed to log activity'); }
         },
         renderCharts() {
-            // Spiritual Chart
+            const getMonthArray = (dataMap) => {
+                const arr = new Array(12).fill(0);
+                for(let i=1; i<=12; i++) {
+                    if (dataMap[i]) arr[i-1] = dataMap[i];
+                }
+                return arr;
+            };
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            // 1. Donation Trends Chart
+            const donCtx = document.getElementById('donationChart').getContext('2d');
+            if (this.charts.donation) this.charts.donation.destroy();
+            this.charts.donation = new Chart(donCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Donations (Rs)',
+                        data: getMonthArray(this.chartsData.donation_trends),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 2. Beneficiary Chart
+            const benCtx = document.getElementById('beneficiaryChart').getContext('2d');
+            if (this.charts.beneficiary) this.charts.beneficiary.destroy();
+            const benLabels = Object.keys(this.chartsData.beneficiary_breakdown);
+            const benData = Object.values(this.chartsData.beneficiary_breakdown);
+            this.charts.beneficiary = new Chart(benCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: benLabels.length ? benLabels : ['No Data'],
+                    datasets: [{
+                        data: benData.length ? benData : [1],
+                        backgroundColor: ['#6366f1', '#f43f5e', '#f59e0b', '#8b5cf6', '#e2e8f0']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 3. Volunteer Chart
+            const volCtx = document.getElementById('volunteerChart').getContext('2d');
+            if (this.charts.volunteer) this.charts.volunteer.destroy();
+            this.charts.volunteer = new Chart(volCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'New Volunteers',
+                        data: getMonthArray(this.chartsData.volunteer_trends),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Spiritual Chart (Existing)
             const spiritualCtx = document.getElementById('spiritualChart').getContext('2d');
             if (this.charts.spiritual) this.charts.spiritual.destroy();
-
             this.charts.spiritual = new Chart(spiritualCtx, {
-                type: 'doughnut',
+                type: 'pie',
                 data: {
                     labels: this.spiritualStats.map(s => s.name),
                     datasets: [{
                         data: this.spiritualStats.map(s => s.total_hours),
-                        backgroundColor: [
-                            'rgba(99, 102, 241, 0.7)',
-                            'rgba(168, 85, 247, 0.7)',
-                            'rgba(236, 72, 153, 0.7)',
-                            'rgba(16, 185, 129, 0.7)',
-                            'rgba(245, 158, 11, 0.7)'
-                        ],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
+                        backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#10b981', '#f59e0b']
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right' }
-                    }
-                }
-            });
-
-            // Performance Chart
-            const perfCtx = document.getElementById('performanceChart').getContext('2d');
-            if (this.charts.performance) this.charts.performance.destroy();
-
-            this.charts.performance = new Chart(perfCtx, {
-                type: 'bar',
-                data: {
-                    labels: this.activityStats.map(s => s.name),
-                    datasets: [{
-                        label: 'Activity Actions',
-                        data: this.activityStats.map(s => s.activity_count),
-                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                        borderColor: 'rgba(99, 102, 241, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
     }

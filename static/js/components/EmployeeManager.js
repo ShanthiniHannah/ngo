@@ -2,14 +2,17 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="manager-page">
+    <div class="manager-page page-fade-in">
         <!-- Page Header -->
         <div class="page-header">
             <div>
-                <h2>👥 Employee Roster</h2>
+                <h2>Employee Roster</h2>
                 <p class="page-subtitle">Manage all staff members</p>
             </div>
-            <button class="btn btn-primary" @click="openAdd" v-if="isAdminOrHR">+ Add Employee</button>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
+                <button class="btn btn-primary" @click="openAdd" v-if="isAdminOrHR">+ Add Employee</button>
+            </div>
         </div>
 
         <!-- Stats Bar -->
@@ -21,7 +24,7 @@ export default {
 
         <!-- Search -->
         <div class="search-bar">
-            <input type="text" v-model="search" placeholder="🔍  Search by name, email or sponsor..." class="search-input">
+            <input type="text" v-model="search" placeholder="Search by name, email or sponsor..." class="search-input">
         </div>
 
         <!-- Loading -->
@@ -63,8 +66,8 @@ export default {
                             <td>{{ emp.sponsor || '—' }}</td>
                             <td v-if="isAdminOrHR">
                                 <div class="action-btns">
-                                    <button class="btn btn-sm btn-secondary" @click="openEdit(emp)" title="Edit">✏️</button>
-                                    <button class="btn btn-sm btn-danger" @click="confirmDelete(emp)" title="Delete">🗑️</button>
+                                    <button class="btn btn-sm btn-secondary" @click="openEdit(emp)" title="Edit">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @click="confirmDelete(emp)" title="Delete">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -218,6 +221,19 @@ export default {
                 this.deleteTarget = null;
                 this.fetch();
             } catch (e) { window.toast('Failed to delete employee', 'error'); this.deleteTarget = null; }
+        },
+        exportCSV() {
+            if (!this.employees.length) return window.toast('No data to export', 'warning');
+            const headers = ['id', 'name', 'email', 'age', 'gender', 'address', 'sponsor', 'hr_name'];
+            const rows = [headers.join(',')];
+            for (const e of this.employees) {
+                const row = headers.map(h => `"${(e[h] || '').toString().replace(/"/g, '""')}"`);
+                rows.push(row.join(','));
+            }
+            const blob = new Blob([rows.join('\\n')], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob); a.download = 'employees_export.csv';
+            a.click();
         }
     }
 }

@@ -6,6 +6,7 @@ import jwt
 import datetime
 import functools
 import secrets
+from extensions import limiter
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -93,6 +94,7 @@ def _auto_checkout(user_id):
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     data     = request.get_json()
     email    = data.get('email')
@@ -103,7 +105,24 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password, password):
+    if user:
+        if user.locked_until and user.locked_until > datetime.datetime.utcnow():
+            remaining = (user.locked_until - datetime.datetime.utcnow()).seconds // 60
+            return jsonify({'error': f'Account locked due to too many failed attempts. Try again in {remaining or 1} minutes.'}), 403
+
+        if not check_password_hash(user.password, password):
+            user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+            if user.failed_login_attempts >= 5:
+                # Lock for 15 minutes
+                user.locked_until = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+            db.session.commit()
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        # Valid login, reset attempts
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        db.session.commit()
+    else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
     # ── OTP 2-step: check if user has a phone number ─────────────────────────

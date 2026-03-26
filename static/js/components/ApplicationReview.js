@@ -5,7 +5,7 @@ export default {
     <div class="manager-page">
         <div class="page-header">
             <div>
-                <h2>📝 Application Review</h2>
+                <h2>Application Review</h2>
                 <p class="page-subtitle">Review membership applications, schedule interviews, and send decisions</p>
             </div>
             <div style="display:flex;gap:0.75rem;align-items:center;">
@@ -36,7 +36,7 @@ export default {
         </div>
 
         <div class="search-bar">
-            <input v-model="search" type="text" placeholder="🔍  Search by name or email..." class="search-input">
+            <input v-model="search" type="text" placeholder="Search by name or email..." class="search-input">
         </div>
 
         <div v-if="loading" class="loading-state"><div class="spinner"></div> Loading applications...</div>
@@ -68,13 +68,13 @@ export default {
                             </td>
                             <td>
                                 <div class="action-btns">
-                                    <button class="btn btn-sm btn-secondary" @click="viewDetails(a.id)" title="View Full Application">👁️</button>
+                                    <button class="btn btn-sm btn-secondary" @click="viewDetails(a.id)" title="View Full Application">View</button>
                                     <button class="btn btn-sm btn-primary" @click="openInterview(a)" title="Schedule Interview"
-                                        v-if="['Pending','Under Review'].includes(a.status)">📅</button>
+                                        v-if="['Pending','Under Review'].includes(a.status)">Schedule</button>
                                     <button class="btn btn-sm" style="background:#d1fae5;color:#065f46" @click="setStatus(a,'Approved')"
-                                        v-if="a.status === 'Interview Scheduled'" title="Approve">✅</button>
+                                        v-if="a.status === 'Interview Scheduled'" title="Approve">Approve</button>
                                     <button class="btn btn-sm btn-danger" @click="openReject(a)"
-                                        v-if="!['Rejected','Approved'].includes(a.status)" title="Reject">❌</button>
+                                        v-if="!['Rejected','Approved'].includes(a.status)" title="Reject">Reject</button>
                                 </div>
                             </td>
                         </tr>
@@ -96,7 +96,7 @@ export default {
                         </div>
 
                         <div class="app-section">
-                            <h4>👤 Personal Information</h4>
+                            <h4>Personal Information</h4>
                             <div class="app-grid">
                                 <div class="app-field"><span class="afl">Type</span><span class="afv">{{ viewApp.application_type }}</span></div>
                                 <div class="app-field"><span class="afl">Email</span><span class="afv">{{ viewApp.email }}</span></div>
@@ -109,7 +109,7 @@ export default {
                         </div>
 
                         <div class="app-section">
-                            <h4>📋 Background</h4>
+                            <h4>Background</h4>
                             <div class="app-grid">
                                 <div class="app-field"><span class="afl">Education</span><span class="afv">{{ viewApp.education }}</span></div>
                                 <div class="app-field"><span class="afl">Criminal Record</span>
@@ -123,7 +123,7 @@ export default {
                         </div>
 
                         <div class="app-section">
-                            <h4>✝️ Spiritual Life</h4>
+                            <h4>Spiritual Life</h4>
                             <div class="app-grid">
                                 <div class="app-field"><span class="afl">Christian</span><span class="afv">{{ viewApp.is_christian }}</span></div>
                                 <div class="app-field"><span class="afl">Years as Believer</span><span class="afv">{{ viewApp.years_as_believer }}</span></div>
@@ -137,7 +137,7 @@ export default {
                         </div>
 
                         <div class="app-section" v-if="viewApp.interview_date">
-                            <h4>📅 Interview</h4>
+                            <h4>Interview</h4>
                             <div class="app-grid">
                                 <div class="app-field"><span class="afl">Scheduled</span><span class="afv">{{ viewApp.interview_date }}</span></div>
                                 <div class="app-field full"><span class="afl">Notes</span><span class="afv">{{ viewApp.interview_notes }}</span></div>
@@ -147,7 +147,7 @@ export default {
                         <div class="form-actions">
                             <button class="btn btn-secondary" @click="viewApp=null">Close</button>
                             <button class="btn btn-primary" @click="openInterview(viewApp); viewApp=null"
-                                v-if="['Pending','Under Review'].includes(viewApp.status)">📅 Schedule Interview</button>
+                                v-if="['Pending','Under Review'].includes(viewApp.status)">Schedule Interview</button>
                         </div>
                     </div>
                 </div>
@@ -159,7 +159,7 @@ export default {
             <div class="modal" v-if="interviewTarget" style="display:flex;">
                 <div class="modal-content glass-card" style="max-width:450px;">
                     <span class="close" @click="interviewTarget=null">&times;</span>
-                    <h2>📅 Schedule Interview</h2>
+                    <h2>Schedule Interview</h2>
                     <p>Scheduling for <strong>{{ interviewTarget.full_name }}</strong> ({{ interviewTarget.application_type }}). An email will be sent to <strong>{{ interviewTarget.email }}</strong>.</p>
                     <form @submit.prevent="confirmInterview">
                         <div class="form-group" style="margin-top:1rem;">
@@ -173,7 +173,7 @@ export default {
                         <div v-if="formError" class="error-box">{{ formError }}</div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" @click="interviewTarget=null">Cancel</button>
-                            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Sending...' : '📧 Confirm & Send Email' }}</button>
+                            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Sending...' : 'Confirm & Send Email' }}</button>
                         </div>
                     </form>
                 </div>
@@ -185,7 +185,7 @@ export default {
             <div class="modal" v-if="rejectTarget" style="display:flex;">
                 <div class="modal-content glass-card" style="max-width:420px;">
                     <span class="close" @click="rejectTarget=null">&times;</span>
-                    <h2>❌ Reject Application</h2>
+                    <h2>Reject Application</h2>
                     <p>Reject the application of <strong>{{ rejectTarget.full_name }}</strong>? They will receive a rejection email.</p>
                     <div class="form-group" style="margin-top:1rem;">
                         <label>Reason for Rejection (optional)</label>

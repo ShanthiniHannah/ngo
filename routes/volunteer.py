@@ -3,46 +3,12 @@ from database import db
 from models import db, Volunteer, Beneficiary, User, Role
 from .auth import token_required
 from helpers import log_activity
+from services.email_service import send_email
 from werkzeug.security import generate_password_hash
 import secrets
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 volunteer_bp = Blueprint('volunteer', __name__)
 
-
-# ─── Email Helper ─────────────────────────────────────────────────────────────
-def send_email(to_email, subject, html_body):
-    smtp_host = current_app.config.get('MAIL_SERVER', '')
-    smtp_user = current_app.config.get('MAIL_USERNAME', '')
-    smtp_pass = current_app.config.get('MAIL_PASSWORD', '')
-    smtp_port = int(current_app.config.get('MAIL_PORT', 587))
-    sender    = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@ngoapp.com')
-
-    if not smtp_host or not smtp_user:
-        print("=" * 60)
-        print(f"[EMAIL MOCK] From: {sender}  →  To: {to_email}")
-        print(f"[EMAIL MOCK] Subject: {subject}")
-        print(html_body)
-        print("=" * 60)
-        return True
-
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From']    = sender
-        msg['To']      = to_email
-        msg.attach(MIMEText(html_body, 'html'))
-        with smtplib.SMTP(smtp_host, smtp_port) as srv:
-            srv.starttls()
-            srv.login(smtp_user, smtp_pass)
-            srv.sendmail(sender, to_email, msg.as_string())
-        print(f"[EMAIL] Sent '{subject}'  →  {to_email}")
-        return True
-    except Exception as e:
-        print(f"[EMAIL ERROR] Failed to send to {to_email}: {e}")
-        return False
 
 
 # ─── Email Templates ──────────────────────────────────────────────────────────
@@ -50,7 +16,7 @@ def build_beneficiary_approved_email(name):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#059669,#10b981);padding:30px;text-align:center">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Registration Approved!</p>
   </div>
   <div style="padding:30px">
@@ -60,7 +26,7 @@ def build_beneficiary_approved_email(name):
     <div style="background:#f0fdf4;border-left:4px solid #059669;padding:16px;border-radius:8px;margin:20px 0">
       <p style="color:#065f46;margin:0">Our team will be in touch shortly to connect you with the right support and resources.</p>
     </div>
-    <p style="color:#475569">God bless you!<br><strong>NGO Manager Team</strong></p>
+    <p style="color:#475569">God bless you!<br><strong>ArcMission Team</strong></p>
   </div>
 </div>"""
 
@@ -74,7 +40,7 @@ def build_beneficiary_rejected_email(name, reason=None):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:30px;text-align:center">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Registration Update</p>
   </div>
   <div style="padding:30px">
@@ -83,15 +49,30 @@ def build_beneficiary_rejected_email(name, reason=None):
       to process your registration at this time.</p>
     {reason_html}
     <p style="color:#475569">Please feel free to contact us for more information.
-      We encourage you to reapply in the future.<br><strong>NGO Manager Team</strong></p>
+      We encourage you to reapply in the future.<br><strong>ArcMission Team</strong></p>
   </div>
 </div>"""
 
 
 # ─── Volunteer CRUD ───────────────────────────────────────────────────────────
 @volunteer_bp.route('/volunteer', methods=['GET'])
-def get_volunteers():
-    volunteers = Volunteer.query.all()
+@token_required
+def get_volunteers(current_user):
+    user_role = current_user.role.name
+    if user_role in ['Admin', 'HR']:
+        volunteers = Volunteer.query.all()
+    elif user_role == 'Beneficiary':
+        from models import Beneficiary
+        ben = Beneficiary.query.filter_by(email=current_user.email).first()
+        if ben and ben.assigned_volunteer_id:
+            volunteers = Volunteer.query.filter_by(id=ben.assigned_volunteer_id).all()
+        else:
+            volunteers = []
+    elif user_role == 'Volunteer':
+        volunteers = Volunteer.query.filter_by(user_id=current_user.id).all()
+    else:
+        return jsonify({'error': 'Unauthorized access'}), 403
+
     return jsonify([{
         'id'          : v.id,
         'name'        : v.name,
@@ -201,7 +182,24 @@ def delete_volunteer(current_user, id):
 
 # ─── Beneficiary CRUD ─────────────────────────────────────────────────────────
 @volunteer_bp.route('/beneficiary', methods=['GET'])
-def get_beneficiaries():
+@token_required
+def get_beneficiaries(current_user):
+    user_role = current_user.role.name
+    if user_role in ['Admin', 'HR']:
+        bens = Beneficiary.query.all()
+    elif user_role == 'Volunteer':
+        vol = Volunteer.query.filter_by(user_id=current_user.id).first()
+        if vol:
+            bens = Beneficiary.query.filter_by(assigned_volunteer_id=vol.id).all()
+        else:
+            bens = []
+    elif user_role == 'Beneficiary':
+        bens = Beneficiary.query.filter_by(email=current_user.email).all()
+    elif user_role == 'Donor':
+        bens = Beneficiary.query.filter(Beneficiary.status.in_(['Approved', 'Served'])).all()
+    else:
+        bens = []
+
     return jsonify([{
         'id'                  : b.id,
         'name'                : b.name,
@@ -212,7 +210,7 @@ def get_beneficiaries():
         'status'              : b.status,
         'needs'               : b.needs,
         'assigned_volunteer_id': b.assigned_volunteer_id
-    } for b in Beneficiary.query.all()])
+    } for b in bens])
 
 
 @volunteer_bp.route('/beneficiary', methods=['POST'])
@@ -306,13 +304,13 @@ def review_beneficiary(current_user, id):
             if new_status == 'Approved':
                 send_email(
                     to_email  = email_to,
-                    subject   = 'Your Beneficiary Registration is Approved — NGO Manager',
+                    subject   = 'Your Beneficiary Registration is Approved — ArcMission',
                     html_body = build_beneficiary_approved_email(ben.name)
                 )
             else:
                 send_email(
                     to_email  = email_to,
-                    subject   = 'Your Beneficiary Registration Update — NGO Manager',
+                    subject   = 'Your Beneficiary Registration Update — ArcMission',
                     html_body = build_beneficiary_rejected_email(ben.name, rejection_reason)
                 )
 

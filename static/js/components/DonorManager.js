@@ -2,13 +2,16 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="manager-page">
+    <div class="manager-page page-fade-in">
         <div class="page-header">
             <div>
-                <h2>❤️ Donor Management</h2>
+                <h2>Donor Management</h2>
                 <p class="page-subtitle">Track donors and their contributions</p>
             </div>
-            <button class="btn btn-primary" @click="openAdd" v-if="isAdminOrHR">+ Add Donor</button>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
+                <button class="btn btn-primary" @click="openAdd" v-if="isAdminOrHR">+ Add Donor</button>
+            </div>
         </div>
 
         <div class="stats-bar">
@@ -17,7 +20,7 @@ export default {
         </div>
 
         <div class="search-bar">
-            <input type="text" v-model="search" placeholder="🔍  Search by name or email..." class="search-input">
+            <input type="text" v-model="search" placeholder="Search by name or email..." class="search-input">
         </div>
 
         <div v-if="loading" class="loading-state"><div class="spinner"></div> Loading donors...</div>
@@ -28,7 +31,7 @@ export default {
                     <thead>
                         <tr>
                             <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
-                            <th>Donation Amount</th><th v-if="isAdminOrHR">Actions</th>
+                            <th>Transaction ID</th><th>Donation Amount</th><th v-if="isAdminOrHR">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,11 +43,12 @@ export default {
                             <td><strong>{{ d.name }}</strong></td>
                             <td class="muted-cell">{{ d.email }}</td>
                             <td>{{ d.phone || '—' }}</td>
+                            <td><span class="muted-cell">{{ d.transaction_id || '—' }}</span></td>
                             <td><span class="amount-badge">Rs.{{ (d.donation_amount || 0).toLocaleString() }}</span></td>
                             <td v-if="isAdminOrHR">
                                 <div class="action-btns">
-                                    <button class="btn btn-sm btn-secondary" @click="openEdit(d)">✏️</button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteTarget=d">🗑️</button>
+                                    <button class="btn btn-sm btn-secondary" @click="openEdit(d)">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @click="deleteTarget=d">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -80,9 +84,15 @@ export default {
                                 <input type="number" v-model="form.donation_amount" step="0.01" min="0" placeholder="0.00">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Address</label>
-                            <input type="text" v-model="form.address" placeholder="City, State">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Transaction ID</label>
+                                <input type="text" v-model="form.transaction_id" placeholder="e.g. TXN123456789">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <input type="text" v-model="form.address" placeholder="City, State">
+                            </div>
                         </div>
                         <div v-if="formError" class="error-box">{{ formError }}</div>
                         <div class="form-actions">
@@ -115,7 +125,7 @@ export default {
             donors: [], loading: true, saving: false,
             search: '', showModal: false, editing: null, deleteTarget: null,
             formError: '', phoneError: '',
-            form: { name: '', email: '', phone: '', donation_amount: 0, address: '' }
+            form: { name: '', email: '', phone: '', transaction_id: '', donation_amount: 0, address: '' }
         };
     },
     computed: {
@@ -147,12 +157,12 @@ export default {
         },
         openAdd() {
             this.editing = null; this.formError = ''; this.phoneError = '';
-            this.form = { name: '', email: '', phone: '', donation_amount: 0, address: '' };
+            this.form = { name: '', email: '', phone: '', transaction_id: '', donation_amount: 0, address: '' };
             this.showModal = true;
         },
         openEdit(d) {
             this.editing = d; this.formError = ''; this.phoneError = '';
-            this.form = { name: d.name, email: d.email, phone: d.phone, donation_amount: d.donation_amount, address: d.address };
+            this.form = { name: d.name, email: d.email, phone: d.phone, transaction_id: d.transaction_id || '', donation_amount: d.donation_amount, address: d.address };
             this.showModal = true;
         },
         closeModal() { this.showModal = false; this.editing = null; this.phoneError = ''; },
@@ -177,6 +187,19 @@ export default {
                 window.toast(`${this.deleteTarget.name} deleted`, 'info');
                 this.deleteTarget = null; this.fetch();
             } catch (e) { window.toast('Delete failed', 'error'); this.deleteTarget = null; }
+        },
+        exportCSV() {
+            if (!this.donors.length) return window.toast('No data to export', 'warning');
+            const headers = ['id', 'name', 'email', 'phone', 'address', 'donation_amount', 'transaction_id'];
+            const rows = [headers.join(',')];
+            for (const d of this.donors) {
+                const row = headers.map(h => `"${(d[h] || '').toString().replace(/"/g, '""')}"`);
+                rows.push(row.join(','));
+            }
+            const blob = new Blob([rows.join('\\n')], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob); a.download = 'donors_export.csv';
+            a.click();
         }
     }
 }

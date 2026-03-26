@@ -63,11 +63,14 @@ def init_db(app):
 
         # Seed basic roles + 19 users if none exist
         from models import User
-        if User.query.count() == 0:
-            print("No users found. Running auto-seed...")
-            try:
-                from seed_all_users import seed
-                seed(app_instance=app)
-            except Exception as e:
-                print(f"Auto-seed failed: {e}")
+        try:
+            if User.query.count() == 0:
+                print("No users found. Running auto-seed...")
+                try:
+                    from seed_all_users import seed
+                    seed(app_instance=app)
+                except Exception as e:
+                    print(f"Auto-seed failed: {e}")
+        except Exception as e:
+            print(f"Skipping user count check (likely pending migration): {e}")
 

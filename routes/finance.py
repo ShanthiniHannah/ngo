@@ -71,7 +71,7 @@ def generate_receipt(id):
     
     Thank you for your generous support!
     ======================================
-    NGO Management System
+    ArcMission
     """
     
     return jsonify({

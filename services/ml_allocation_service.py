@@ -1,9 +1,10 @@
 """
 ML Volunteer Allocation Service
 --------------------------------
-Uses a pre-trained Decision Tree model to predict the best volunteer
-for a given beneficiary based on:
+Uses a pre-trained Decision Tree model to generate ranked volunteer
+SUGGESTIONS for a given beneficiary. HR reviews and approves/rejects.
 
+Features used:
   - skill_match    : 1 if any word in beneficiary needs matches volunteer skills
   - location_match : hardcoded 0 (no location column in current schema)
   - availability   : 1 if volunteer.availability is a non-empty string
@@ -57,7 +58,7 @@ def _skill_match(volunteer, beneficiary) -> int:
 
 
 def predict_score(volunteer, beneficiary) -> int:
-    """Return 1 (assign) or 0 (skip) for this volunteer-beneficiary pair."""
+    """Return 1 (suitable) or 0 (skip) for this volunteer-beneficiary pair."""
     _load_model()
 
     skill_match    = _skill_match(volunteer, beneficiary)
@@ -70,27 +71,38 @@ def predict_score(volunteer, beneficiary) -> int:
     return int(prediction[0])
 
 
-def assign_volunteer_ml(beneficiary):
+def get_suggestions(beneficiary, top_n=5):
     """
-    Iterate over all volunteers and return the first predicted as suitable.
-    Returns a Volunteer object, or None if no match is found.
+    Return top-N ranked volunteer suggestions WITHOUT assigning.
+    Returns list of dicts: [{volunteer, score, skill_match, workload}, ...]
+    
+    ML predicts suitability (1/0), then we rank by a composite score:
+      - skill_match contributes +2
+      - lower workload contributes more (bonus = max(0, 5 - workload))
     """
     from models import Volunteer  # local import to avoid circular imports
 
     volunteers = Volunteer.query.all()
 
-    # Score every volunteer, pick the one predicted=1 with lowest workload
     candidates = []
     for v in volunteers:
-        if predict_score(v, beneficiary) == 1:
-            candidates.append((len(v.beneficiaries), v))
+        sm = _skill_match(v, beneficiary)
+        wl = len(v.beneficiaries)
+        pred = predict_score(v, beneficiary)
 
-    if not candidates:
-        return None
+        if pred == 1:
+            # Composite score: skill match bonus + workload bonus
+            score = (sm * 2) + max(0, 5 - wl)
+            candidates.append({
+                'volunteer': v,
+                'score': round(score, 2),
+                'skill_match': bool(sm),
+                'workload': wl
+            })
 
-    # Return the candidate with the smallest existing workload
-    candidates.sort(key=lambda x: x[0])
-    return candidates[0][1]
+    # Sort by score descending, then workload ascending
+    candidates.sort(key=lambda x: (-x['score'], x['workload']))
+    return candidates[:top_n]
 
 
 def get_model_accuracy() -> float:

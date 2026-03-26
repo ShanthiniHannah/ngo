@@ -4,14 +4,25 @@ from datetime import datetime
 
 def log_activity(user_id, action, details):
     """
-    Logs a user action to the activity_logs table.
+    Logs a user action to the activity_logs table including IP address.
     Rolls back the session on failure to avoid leaving it in a broken state.
     """
+    from flask import request
+    ip_address = None
+    try:
+        if request:
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            if ip_address:
+                ip_address = ip_address.split(',')[0].strip()
+    except Exception:
+        pass
+
     try:
         log = ActivityLog(
             user_id=user_id,
             action=action,
             details=details,
+            ip_address=ip_address,
             timestamp=datetime.utcnow()
         )
         db.session.add(log)

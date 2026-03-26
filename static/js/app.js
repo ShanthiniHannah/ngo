@@ -18,6 +18,7 @@ import EmployeePortal from './components/EmployeePortal.js';
 import ApplicationForm from './components/ApplicationForm.js';
 import ApplicationReview from './components/ApplicationReview.js';
 import BeneficiaryApplicationForm from './components/BeneficiaryApplicationForm.js';
+import DailyVerse from './components/DailyVerse.js';
 
 const { createApp, reactive, computed } = Vue;
 const { createRouter, createWebHashHistory } = VueRouter;
@@ -190,5 +191,6 @@ const app = createApp({
 
 app.component('sidebar-component', Sidebar);
 app.component('toast-notifications', Toast);
+app.component('daily-verse', DailyVerse);
 app.use(router);
 app.mount('#app');

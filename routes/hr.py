@@ -188,7 +188,7 @@ def checkout(current_user):
 @hr_bp.route('/attendance', methods=['GET'])
 @token_required
 def get_attendance(current_user):
-    if current_user.role.name in ['Admin', 'HR']:
+    if current_user.role.name == 'Admin':
         records = Attendance.query.order_by(Attendance.date.desc()).all()
     else:
         records = Attendance.query.filter_by(user_id=current_user.id).order_by(Attendance.date.desc()).all()

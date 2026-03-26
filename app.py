@@ -6,6 +6,8 @@ from flask import Flask, render_template, redirect, url_for
 from flasgger import Swagger
 from database import init_db, db
 from flask_migrate import Migrate
+from extensions import limiter
+
 from routes.hr import hr_bp
 from routes.employee import employee_bp
 from routes.auth import auth_bp
@@ -18,6 +20,7 @@ from routes.application import application_bp
 from routes.forgot_password import forgot_bp
 from routes.otp import otp_bp
 from routes.ai_allocation import ai_bp
+from routes.acknowledgment import acknowledgment_bp
 
 app = Flask(__name__)
 
@@ -25,7 +28,7 @@ app = Flask(__name__)
 # SECRET_KEY must be set in .env for production. Never hardcode this.
 app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24)
 
-app.config['SWAGGER'] = {'title': 'NGO Manager API', 'uiversion': 3}
+app.config['SWAGGER'] = {'title': 'ArcMission API', 'uiversion': 3}
 
 # --- Email config (set in .env for real delivery) ---
 app.config['MAIL_SERVER']         = os.environ.get('MAIL_SERVER', '')
@@ -42,6 +45,8 @@ app.config['FAST2SMS_API_KEY'] = os.environ.get('FAST2SMS_API_KEY', '')
 init_db(app)
 migrate = Migrate(app, db)
 
+limiter.init_app(app)
+
 swagger = Swagger(app)
 
 # --- Register Blueprints ---
@@ -57,6 +62,7 @@ app.register_blueprint(application_bp)
 app.register_blueprint(forgot_bp)
 app.register_blueprint(otp_bp)
 app.register_blueprint(ai_bp)
+app.register_blueprint(acknowledgment_bp)
 
 
 @app.route('/')

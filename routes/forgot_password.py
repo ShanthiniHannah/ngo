@@ -11,6 +11,8 @@ from models import User
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 import secrets
+import re
+from extensions import limiter
 
 forgot_bp = Blueprint('forgot', __name__)
 
@@ -20,13 +22,23 @@ _reset_tokens   = {}   # forgot-password tokens
 _set_pwd_tokens = {}   # new account activation tokens
 
 
+def is_strong_password(password):
+    """Enforces minimum 8 chars, uppercase, lowercase, number, special char."""
+    if len(password) < 8: return False
+    if not re.search(r"[A-Z]", password): return False
+    if not re.search(r"[a-z]", password): return False
+    if not re.search(r"\d", password): return False
+    if not re.search(r"[@$!%*?&#]", password): return False
+    return True
+
+
 def _send_reset_email(to_email, reset_link, name):
     """Send password reset email."""
-    from routes.application import send_email
+    from services.email_service import send_email
     html = f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:16px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#6366f1,#a855f7);padding:36px;text-align:center">
-    <h1 style="color:white;margin:0;font-size:1.8rem">NGO Manager</h1>
+    <h1 style="color:white;margin:0;font-size:1.8rem">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Password Reset Request</p>
   </div>
   <div style="padding:36px">
@@ -47,7 +59,7 @@ def _send_reset_email(to_email, reset_link, name):
     </p>
   </div>
 </div>"""
-    send_email(to_email, 'Reset Your NGO Manager Password', html)
+    send_email(to_email, 'Reset Your ArcMission Password', html)
 
 
 def send_set_password_email(to_email, name, role, user_id):
@@ -58,7 +70,7 @@ def send_set_password_email(to_email, name, role, user_id):
 
     From: MAIL_DEFAULT_SENDER  →  To: new user's email
     """
-    from routes.application import send_email
+    from services.email_service import send_email
 
     token = secrets.token_urlsafe(32)
     _set_pwd_tokens[token] = {
@@ -72,12 +84,12 @@ def send_set_password_email(to_email, name, role, user_id):
     html = f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:16px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#059669,#10b981);padding:36px;text-align:center">
-    <h1 style="color:white;margin:0;font-size:1.8rem">NGO Manager</h1>
+    <h1 style="color:white;margin:0;font-size:1.8rem">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Welcome! Activate Your Account</p>
   </div>
   <div style="padding:36px">
     <h2 style="color:#1e293b">Hi {name},</h2>
-    <p style="color:#475569">Your <strong>{role}</strong> account has been created on NGO Manager.
+    <p style="color:#475569">Your <strong>{role}</strong> account has been created on ArcMission.
       Click the button below to set your password and activate your account.</p>
     <div style="text-align:center;margin:32px 0">
       <a href="{set_link}"
@@ -90,15 +102,16 @@ def send_set_password_email(to_email, name, role, user_id):
       <p style="color:#065f46;margin:0">This link expires in <strong>24 hours</strong>.
         If you did not expect this email, please ignore it.</p>
     </div>
-    <p style="color:#475569">God bless you!<br><strong>NGO Manager Team</strong></p>
+    <p style="color:#475569">God bless you!<br><strong>ArcMission Team</strong></p>
   </div>
 </div>"""
-    send_email(to_email, 'Activate Your NGO Manager Account', html)
+    send_email(to_email, 'Activate Your ArcMission Account', html)
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
 @forgot_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit("3 per minute")
 def forgot_password():
     data  = request.get_json()
     email = (data.get('email') or '').strip().lower()
@@ -134,8 +147,8 @@ def reset_password():
     if not token or not new_password:
         return jsonify({'error': 'Token and new password are required'}), 400
 
-    if len(new_password) < 6:
-        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    if not is_strong_password(new_password):
+        return jsonify({'error': 'Password must be at least 8 characters, and include uppercase, lowercase, number, and special character.'}), 400
 
     record = _reset_tokens.get(token)
     if not record:
@@ -172,8 +185,8 @@ def set_password():
     if not token or not new_password:
         return jsonify({'error': 'Token and new password are required'}), 400
 
-    if len(new_password) < 6:
-        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    if not is_strong_password(new_password):
+        return jsonify({'error': 'Password must be at least 8 characters, and include uppercase, lowercase, number, and special character.'}), 400
 
     record = _set_pwd_tokens.get(token)
     if not record:

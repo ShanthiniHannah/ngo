@@ -64,7 +64,7 @@ def _send_sms_fast2sms(to_phone: str, otp: str) -> None:
     url     = 'https://www.fast2sms.com/dev/bulkV2'
     payload = {
         'route'   : 'q',
-        'message' : f'Your NGO Manager OTP is {otp}. Valid for {OTP_EXPIRY_MINUTES} minutes. Do not share.',
+        'message' : f'Your ArcMission OTP is {otp}. Valid for {OTP_EXPIRY_MINUTES} minutes. Do not share.',
         'language': 'english',
         'numbers' : to_phone,
     }

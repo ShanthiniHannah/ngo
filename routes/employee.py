@@ -10,7 +10,11 @@ employee_bp = Blueprint('employee', __name__)
 
 
 @employee_bp.route('/employee', methods=['GET'])
-def get_employees():
+@token_required
+def get_employees(current_user):
+    if current_user.role.name not in ['Admin', 'HR']:
+        return jsonify({'error': 'Unauthorized access'}), 403
+        
     employees = Employee.query.all()
     output = []
     for emp in employees:

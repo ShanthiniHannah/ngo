@@ -91,3 +91,45 @@ def get_performance_stats(current_user):
         'activity_stats': activity_data,
         'spiritual_stats': spiritual_data
     })
+
+
+@analytics_bp.route('/analytics/dashboard-charts', methods=['GET'])
+@token_required
+def get_dashboard_charts(current_user):
+    from models import Donor, Beneficiary, Volunteer, Sponsorship
+    from sqlalchemy.sql import extract
+    import datetime
+
+    current_year = datetime.datetime.utcnow().year
+    
+    # 1. Donation Trends
+    sponsorships = db.session.query(
+        extract('month', Sponsorship.date).label('month'),
+        func.sum(Sponsorship.amount).label('total')
+    ).filter(extract('year', Sponsorship.date) == current_year).group_by('month').all()
+    
+    donation_trends = {str(int(month)): float(total) for month, total in sponsorships}
+
+    # 2. Beneficiary Breakdown
+    ben_status = db.session.query(
+        Beneficiary.status, func.count(Beneficiary.id)
+    ).group_by(Beneficiary.status).all()
+    
+    beneficiary_breakdown = {status: count for status, count in ben_status}
+
+    # 3. Volunteer Trends (created_at is not currently in Volunteer model, so let's fallback to total count or mock it)
+    # Wait, Volunteer has no created_at field directly on the profile model, it relies on User.
+    # We can just join User if we want actual dates.
+    vols = db.session.query(
+        extract('month', User.created_at).label('month'),
+        func.count(Volunteer.id).label('count')
+    ).join(User, Volunteer.user_id == User.id).filter(extract('year', User.created_at) == current_year).group_by('month').all()
+
+    volunteer_trends = {str(int(month)): count for month, count in vols}
+
+    return jsonify({
+        'donation_trends': donation_trends,
+        'beneficiary_breakdown': beneficiary_breakdown,
+        'volunteer_trends': volunteer_trends,
+        'year': current_year
+    })

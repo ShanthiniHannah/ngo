@@ -3,15 +3,15 @@ import { store } from '../store.js';
 export default {
     template: `
     <div class="portal-wrapper">
+        <daily-verse></daily-verse>
         <div class="portal-header">
-            <h1>🤝 Welcome, {{ user.name }}</h1>
+            <h1>Welcome, {{ user.name }}</h1>
             <p class="subtitle">Volunteer Portal</p>
         </div>
 
         <div class="portal-grid">
             <!-- Profile Card -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">🤝</div>
                 <h3>My Volunteer Profile</h3>
                 <div v-if="profile">
                     <p><strong>Volunteer ID:</strong> #{{ profile.volunteer_id }}</p>
@@ -24,7 +24,6 @@ export default {
 
             <!-- Active Projects -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">🚀</div>
                 <h3>Active Projects</h3>
                 <ul class="portal-list" v-if="projects.length">
                     <li v-for="p in projects" :key="p.id">
@@ -37,7 +36,6 @@ export default {
 
             <!-- Assigned Beneficiaries -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">👥</div>
                 <h3>My Beneficiaries</h3>
                 <ul class="portal-list" v-if="beneficiaries.length">
                     <li v-for="b in beneficiaries" :key="b.id">
@@ -50,7 +48,6 @@ export default {
 
             <!-- Summary Card -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">📊</div>
                 <h3>My Summary</h3>
                 <p>Projects involved: <strong>{{ projects.length }}</strong></p>
                 <p>Beneficiaries assigned: <strong>{{ beneficiaries.length }}</strong></p>

@@ -2,13 +2,16 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="manager-page">
+    <div class="manager-page page-fade-in">
         <div class="page-header">
             <div>
-                <h2>💰 Finance Management</h2>
+                <h2>Finance Management</h2>
                 <p class="page-subtitle">Track sponsorships, receipts and financial records</p>
             </div>
-            <button class="btn btn-primary" @click="showModal=true" v-if="isAdminOrHR">+ Record Sponsorship</button>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
+                <button class="btn btn-primary" @click="showModal=true" v-if="isAdminOrHR">+ Record Sponsorship</button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -19,7 +22,7 @@ export default {
         </div>
 
         <div class="search-bar">
-            <input v-model="search" type="text" placeholder="🔍  Search by sponsor name or project..." class="search-input">
+            <input v-model="search" type="text" placeholder="Search by sponsor name or project..." class="search-input">
         </div>
 
         <div v-if="loading" class="loading-state"><div class="spinner"></div> Loading records...</div>
@@ -42,9 +45,10 @@ export default {
                             </td>
                             <td><span class="amount-badge">Rs.{{ (s.amount || 0).toLocaleString() }}</span></td>
                             <td>
-                                <button class="btn btn-sm btn-secondary" @click="downloadReceipt(s)" title="Download Receipt">
-                                    📄 Receipt
-                                </button>
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn btn-sm btn-secondary" @click="downloadReceipt(s)" title="Download Receipt">Receipt</button>
+                                    <button class="btn btn-sm btn-secondary" @click="download80G(s.id)" title="Download 80G Certificate">80G</button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -148,7 +152,7 @@ export default {
                 '.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0}',
                 '.label{color:#64748b}.amount{font-size:2rem;color:#059669;font-weight:700;text-align:center;margin:20px 0}',
                 '.footer{text-align:center;margin-top:30px;color:#64748b;font-size:.85rem}</style></head><body>',
-                '<div class="header"><h1>NGO Manager</h1><p>Official Donation Receipt</p>',
+                '<div class="header"><h1>ArcMission</h1><p>Official Donation Receipt</p>',
                 '<span class="badge">RECEIPT #' + s.id + '</span></div>',
                 '<div class="amount">Rs. ' + (s.amount || 0).toLocaleString() + '</div>',
                 '<div class="row"><span class="label">Date</span><span>' + s.date + '</span></div>',
@@ -165,6 +169,22 @@ export default {
             win.focus();
             setTimeout(() => win.print(), 500);
             window.toast('Receipt opened — use Print to save as PDF', 'info');
+        },
+        download80G(sponsorshipId) {
+            window.open(`/donor/certificate/${sponsorshipId}`, '_blank');
+        },
+        exportCSV() {
+            if (!this.sponsorships.length) return window.toast('No data to export', 'warning');
+            const headers = ['id', 'date', 'sponsor_name', 'amount', 'donor_name', 'project_name'];
+            const rows = [headers.join(',')];
+            for (const s of this.sponsorships) {
+                const row = headers.map(h => `"${(s[h] || '').toString().replace(/"/g, '""')}"`);
+                rows.push(row.join(','));
+            }
+            const blob = new Blob([rows.join('\\n')], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob); a.download = 'finance_export.csv';
+            a.click();
         }
     }
 }

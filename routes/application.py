@@ -3,10 +3,8 @@ from database import db
 from models import Application, User, Role, Volunteer, Donor, Beneficiary
 from .auth import token_required
 from helpers import log_activity
+from services.email_service import send_email
 from datetime import datetime
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import os
 import uuid
 
@@ -19,41 +17,15 @@ MAX_PHOTO_BYTES    = 5 * 1024 * 1024   # 5 MB
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def _allowed_doc(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
+
 def _photo_upload_dir():
     return os.path.join(current_app.root_path, 'static', 'uploads', 'photos')
 
+def _doc_upload_dir():
+    return os.path.join(current_app.root_path, 'static', 'uploads', 'documents')
 
-# ─── Email Helper ─────────────────────────────────────────────────────────────
-def send_email(to_email, subject, html_body):
-    smtp_host = current_app.config.get('MAIL_SERVER', '')
-    smtp_user = current_app.config.get('MAIL_USERNAME', '')
-    smtp_pass = current_app.config.get('MAIL_PASSWORD', '')
-    smtp_port = int(current_app.config.get('MAIL_PORT', 587))
-    sender    = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@ngoapp.com')
-
-    if not smtp_host or not smtp_user:
-        print("=" * 60)
-        print(f"[EMAIL MOCK] From: {sender}  →  To: {to_email}")
-        print(f"[EMAIL MOCK] Subject: {subject}")
-        print(html_body)
-        print("=" * 60)
-        return True
-
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From']    = sender
-        msg['To']      = to_email
-        msg.attach(MIMEText(html_body, 'html'))
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(sender, to_email, msg.as_string())
-        print(f"[EMAIL] Sent '{subject}'  →  {to_email}")
-        return True
-    except Exception as e:
-        print(f"[EMAIL ERROR] Failed to send to {to_email}: {e}")
-        return False
 
 
 # ─── Helper: create User account + send activation email (called on Approve) ──
@@ -100,19 +72,19 @@ def build_confirmation_email(name, app_type, app_id):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#6366f1,#a855f7);padding:30px;text-align:center">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Application Received</p>
   </div>
   <div style="padding:30px">
     <h2 style="color:#1e293b">Dear {name},</h2>
-    <p style="color:#475569">Thank you for applying to join our NGO as a <strong>{app_type}</strong>.
+    <p style="color:#475569">Thank you for applying to join ArcMission as a <strong>{app_type}</strong>.
       We have received your application (<strong>#{app_id}</strong>).</p>
     <div style="background:#f0fdf4;border-left:4px solid #059669;padding:16px;border-radius:8px;margin:20px 0">
       <p style="color:#065f46;margin:0">Our HR team will review your application within
         <strong>3–5 business days</strong>. If approved, you will receive an email with a link to
         set your password and access your account.</p>
     </div>
-    <p style="color:#475569">God bless you!<br><strong>NGO Manager Team</strong></p>
+    <p style="color:#475569">God bless you!<br><strong>ArcMission Team</strong></p>
   </div>
 </div>"""
 
@@ -122,7 +94,7 @@ def build_beneficiary_confirmation_email(name, reg_id):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:30px;text-align:center">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Beneficiary Registration Received</p>
   </div>
   <div style="padding:30px">
@@ -135,7 +107,7 @@ def build_beneficiary_confirmation_email(name, reg_id):
         set your password and access your account.</p>
     </div>
     <p style="color:#475569">If you have any urgent needs, please contact us directly.<br>
-      <strong>NGO Manager Team</strong></p>
+      <strong>ArcMission Team</strong></p>
   </div>
 </div>"""
 
@@ -149,7 +121,7 @@ def build_interview_email(name, app_type, interview_dt, notes):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#6366f1,#a855f7);padding:30px;text-align:center">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Interview Scheduled</p>
   </div>
   <div style="padding:30px">
@@ -161,7 +133,7 @@ def build_interview_email(name, app_type, interview_dt, notes):
     </div>
     {notes_html}
     <p style="color:#475569">Please confirm by replying to this email.<br>
-      <strong>HR Team, NGO Manager</strong></p>
+      <strong>HR Team, ArcMission</strong></p>
   </div>
 </div>"""
 
@@ -174,7 +146,7 @@ def build_rejection_email(name, reason=None):
     return f"""
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
   <div style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:30px;text-align:center;border-radius:12px 12px 0 0">
-    <h1 style="color:white;margin:0">NGO Manager</h1>
+    <h1 style="color:white;margin:0">ArcMission</h1>
     <p style="color:rgba(255,255,255,.85);margin:8px 0 0">Application Update</p>
   </div>
   <div style="background:#fff;padding:30px;border-radius:0 0 12px 12px">
@@ -182,7 +154,7 @@ def build_rejection_email(name, reason=None):
     <p style="color:#475569">We are unable to approve your application at this time.</p>
     {reason_html}
     <p style="color:#475569">We encourage you to reapply in the future.<br>
-      <strong>NGO Manager Team</strong></p>
+      <strong>ArcMission Team</strong></p>
   </div>
 </div>"""
 
@@ -209,6 +181,26 @@ def upload_photo():
     file.save(os.path.join(upload_dir, unique_name))
     return jsonify({'filename': unique_name, 'url': f'/static/uploads/photos/{unique_name}'}), 200
 
+
+@application_bp.route('/upload/document', methods=['POST'])
+def upload_document():
+    if 'document' not in request.files:
+        return jsonify({'error': 'No document file provided.'}), 400
+    file = request.files['document']
+    if not file or file.filename == '':
+        return jsonify({'error': 'No file selected.'}), 400
+    if not _allowed_doc(file.filename):
+        return jsonify({'error': 'Invalid file type. Allowed: pdf, doc, docx, jpg, png.'}), 400
+    file.seek(0, 2)
+    if file.tell() > MAX_PHOTO_BYTES:
+        return jsonify({'error': 'File too large. Maximum size is 5 MB.'}), 400
+    file.seek(0)
+    ext         = file.filename.rsplit('.', 1)[1].lower()
+    unique_name = f'doc_{uuid.uuid4().hex}.{ext}'
+    upload_dir  = _doc_upload_dir()
+    os.makedirs(upload_dir, exist_ok=True)
+    file.save(os.path.join(upload_dir, unique_name))
+    return jsonify({'filename': unique_name, 'url': f'/static/uploads/documents/{unique_name}'}), 200
 
 @application_bp.route('/apply', methods=['POST'])
 def submit_application():
@@ -276,7 +268,7 @@ def submit_application():
         # Send confirmation email (no account yet, just acknowledgement)
         send_email(
             to_email  = app_obj.email,
-            subject   = f'Application Received — NGO Manager #{app_obj.id}',
+            subject   = f'Application Received — ArcMission #{app_obj.id}',
             html_body = build_confirmation_email(app_obj.full_name, app_obj.application_type, app_obj.id)
         )
 
@@ -338,6 +330,7 @@ def submit_beneficiary_application():
         needs          = full_needs,
         status         = 'Pending',
         photo_filename = data.get('photo_filename'),
+        document_path  = data.get('document_path'),
     )
 
     try:
@@ -347,7 +340,7 @@ def submit_beneficiary_application():
         # Send confirmation email (no account yet)
         send_email(
             to_email  = data['email'],
-            subject   = f'Registration Received — NGO Manager #{beneficiary.id}',
+            subject   = f'Registration Received — ArcMission #{beneficiary.id}',
             html_body = build_beneficiary_confirmation_email(data['full_name'], beneficiary.id)
         )
 
@@ -401,7 +394,7 @@ def update_status(current_user, id):
         a.rejection_reason = data.get('rejection_reason', '')
         send_email(
             to_email  = a.email,
-            subject   = 'Application Update — NGO Manager',
+            subject   = 'Application Update — ArcMission',
             html_body = build_rejection_email(a.full_name, a.rejection_reason)
         )
 
@@ -466,7 +459,7 @@ def schedule_interview(current_user, id):
         log_activity(current_user.id, "SCHEDULE_INTERVIEW", f"Interview for #{id} on {interview_date_str}")
         sent = send_email(
             to_email  = a.email,
-            subject   = 'Interview Scheduled — NGO Manager',
+            subject   = 'Interview Scheduled — ArcMission',
             html_body = build_interview_email(a.full_name, a.application_type, interview_dt, notes)
         )
         return jsonify({

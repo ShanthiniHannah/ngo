@@ -1,22 +1,22 @@
 export default {
     template: `
     <div class="apply-page">
-        <div class="apply-hero" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #8b5cf6 100%);">
+        <div class="apply-hero">
             <div class="apply-hero-inner">
-                <div class="apply-logo">🌟</div>
+                <div class="apply-logo"></div>
                 <h1>Beneficiary Registration</h1>
-                <p>Register to receive <strong>support and care</strong> from our NGO community</p>
+                <p>Register to receive <strong>support and care</strong> from ArcMission community</p>
             </div>
         </div>
 
         <div class="apply-container" v-if="submitted">
             <div class="success-card glass-card">
-                <div class="success-icon">✅</div>
+                <div class="success-icon"></div>
                 <h2>Registration Submitted!</h2>
                 <p>Thank you, <strong>{{ submittedName }}</strong>! Your registration <strong>#{{ submittedId }}</strong> has been received.</p>
                 <div class="success-info">
-                    <p>📧 A confirmation email has been sent to <strong>{{ submittedEmail }}</strong></p>
-                    <p>⏱️ Our team will review your request within <strong>2–3 business days</strong>.</p>
+                    <p>A confirmation email has been sent to <strong>{{ submittedEmail }}</strong></p>
+                    <p>Our team will review your request within <strong>2–3 business days</strong>.</p>
                 </div>
                 <button class="btn btn-primary" @click="$router.push('/login')">Back to Login</button>
             </div>
@@ -35,7 +35,7 @@ export default {
 
                 <!-- Step 0: Personal Information -->
                 <div v-if="currentStep === 0">
-                    <h2>👤 Personal Information</h2>
+                    <h2>Personal Information</h2>
                     <p class="step-desc">Tell us about yourself so we can serve you better</p>
                     <div class="form-group" style="margin-bottom:1.5rem;">
                         <label>Profile Photo <small style="color:#64748b;">(JPG/PNG, max 5MB)</small></label>
@@ -45,7 +45,7 @@ export default {
                             @drop.prevent="onPhotoDrop($event)" @click="$refs.photoInput.click()"
                             style="border:2px dashed #fbbf24;border-radius:16px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(251,191,36,.04);">
                             <input ref="photoInput" type="file" accept="image/*" style="display:none" @change="onPhotoSelect">
-                            <div v-if="!photoPreview"><div style="font-size:2.5rem;">📷</div><p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag & drop a photo here</p></div>
+                            <div v-if="!photoPreview"><div style="font-size:2.5rem;"></div><p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag & drop a photo here</p></div>
                             <div v-else style="position:relative;display:inline-block;">
                                 <img :src="photoPreview" style="width:110px;height:110px;object-fit:cover;border-radius:50%;border:3px solid #f59e0b;">
                                 <button type="button" @click.stop="removePhoto" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.8rem;">x</button>
@@ -84,18 +84,45 @@ export default {
                         </div>
                         <div class="form-group"><label>ID Number</label><input type="text" v-model="form.id_proof_number" placeholder="ID document number"></div>
                     </div>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>Upload ID Document <small style="color:#64748b;">(PDF/JPG/PNG, max 5MB)</small></label>
+                        <div class="photo-upload-box"
+                            :class="{'photo-upload-box--hover': docDragging}"
+                            @dragover.prevent="docDragging=true" @dragleave="docDragging=false"
+                            @drop.prevent="onDocDrop($event)" @click="$refs.docInput.click()"
+                            style="border:2px dashed #3b82f6;border-radius:16px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(59,130,246,.04);">
+                            <input ref="docInput" type="file" accept=".pdf,.doc,.docx,image/*" style="display:none" @change="onDocSelect">
+                            <div v-if="!docPreviewName">
+                                <p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag & drop document here</p>
+                            </div>
+                            <div v-else style="position:relative;display:inline-block;padding: 10px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <span style="color: #3b82f6; font-weight: bold;">{{ docPreviewName }}</span>
+                                <button type="button" @click.stop="removeDoc" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.8rem;">x</button>
+                            </div>
+                            <div v-if="docUploading" style="margin-top:.5rem;color:#3b82f6;font-size:.85rem;">Uploading...</div>
+                            <div v-if="docError" style="margin-top:.5rem;color:#ef4444;font-size:.85rem;">{{ docError }}</div>
+                        </div>
+                    </div>
                     <div v-if="stepError" class="error-box">{{ stepError }}</div>
                 </div>
 
                 <!-- Step 1: Needs & Family Background -->
                 <div v-if="currentStep === 1">
-                    <h2>🏠 Needs & Family Background</h2>
+                    <h2>Needs & Family Background</h2>
                     <p class="step-desc">Help us understand your situation so we can provide the right support</p>
                     <div class="form-group">
-                        <label>Nature of Needs / Assistance Required *</label>
-                        <div class="checkbox-grid">
-                            <label class="check-option" v-for="need in needOptions" :key="need">
-                                <input type="checkbox" :value="need" v-model="form.needs_list"><span>{{ need }}</span>
+                        <label>Services Required * <small style="color:#64748b;">(select up to 2)</small></label>
+                        <div class="service-limit-info">
+                            <span :class="['service-limit-badge', form.needs_list.length >= 2 ? 'service-limit-badge--full' : '']">
+                                {{ form.needs_list.length }} / 2 selected
+                            </span>
+                        </div>
+                        <div class="service-grid">
+                            <label v-for="svc in serviceOptions" :key="svc"
+                                :class="['service-chip', form.needs_list.includes(svc) ? 'service-chip--selected' : '', (form.needs_list.length >= 2 && !form.needs_list.includes(svc)) ? 'service-chip--disabled' : '']"
+                                @click="toggleService(svc)">
+                                <span class="service-chip-check">&#10003;</span>
+                                <span>{{ svc }}</span>
                             </label>
                         </div>
                     </div>
@@ -152,11 +179,11 @@ export default {
 
                 <!-- Step 2: Review & Submit -->
                 <div v-if="currentStep === 2">
-                    <h2>📄 Review & Confirm</h2>
+                    <h2>Review & Confirm</h2>
                     <p class="step-desc">Please review your information before submitting your registration</p>
                     <div class="review-section">
-                        <div class="review-badge" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;padding:8px 18px;border-radius:20px;display:inline-block;font-weight:600;margin-bottom:1rem;">
-                            🌟 Beneficiary Registration
+                        <div class="review-badge" style="background:linear-gradient(135deg,#0ea5e9,#2563eb);color:white;padding:8px 18px;border-radius:20px;display:inline-block;font-weight:600;margin-bottom:1rem;">
+                            Beneficiary Registration
                         </div>
                     </div>
                     <div class="review-grid">
@@ -171,10 +198,10 @@ export default {
                         <div class="review-item"><span class="rl">Emergency Phone</span><span class="rv">{{ form.emergency_contact_phone }}</span></div>
                     </div>
                     <div class="faith-statement" style="margin-top:1.5rem;">
-                        <div class="declaration-header">📜 Declaration & Consent</div>
+                        <div class="declaration-header">Declaration & Consent</div>
                         <ol class="declaration-list">
                             <li><strong>Truthfulness:</strong> I confirm that all the information I have provided is true, accurate, and complete to the best of my knowledge.</li>
-                            <li><strong>Verification Consent:</strong> I give consent to this NGO to verify the information provided, including conducting home visits or contacting my references.</li>
+                            <li><strong>Verification Consent:</strong> I give consent to ArcMission to verify the information provided, including conducting home visits or contacting my references.</li>
                             <li><strong>Data Privacy:</strong> I understand that my personal information will be stored securely and used only for providing support services.</li>
                             <li><strong>Support Conditions:</strong> I acknowledge that approval does not guarantee any specific form of assistance.</li>
                             <li><strong>Updates:</strong> I agree to notify the NGO of any significant changes in my situation.</li>
@@ -197,8 +224,8 @@ export default {
                     </button>
                     <button class="btn btn-primary" v-else @click="submitRegistration"
                             :disabled="submitting || !form.agrees_to_terms"
-                            style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
-                        {{ submitting ? 'Submitting...' : '✅ Submit Registration' }}
+                            style="background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                        {{ submitting ? 'Submitting...' : 'Submit Registration' }}
                     </button>
                 </div>
             </div>
@@ -214,7 +241,9 @@ export default {
             steps: ['Personal Info', 'Needs & Family', 'Review & Submit'],
             photoPreview: null, photoDragging: false, photoUploading: false, photoError: '',
             form_photo_filename: null,
-            needOptions: ['Food & Nutrition','Medical Assistance','Education Support','Shelter / Housing','Clothing','Financial Aid','Counselling / Mental Health','Elderly Care','Child Care','Vocational Training','Legal Aid','Other'],
+            docDragging: false, docUploading: false, docError: '', docPreviewName: null, form_document_path: null,
+            needOptions: ['Food & Nutrition','Medical Assistance','Education Support','Shelter / Housing','Clothing & Essentials','Vocational Training','Counselling','Elderly Care','Child Care','Legal Aid'],
+            serviceOptions: ['Food & Nutrition','Education Support','Shelter / Housing','Medical Assistance','Clothing & Essentials','Vocational Training','Counselling','Elderly Care','Child Care','Legal Aid'],
             form: {
                 full_name: '', email: '', phone: '', age: null, gender: '', marital_status: '', address: '',
                 id_proof_type: '', id_proof_number: '', needs_list: [], situation_description: '',
@@ -225,6 +254,14 @@ export default {
         };
     },
     methods: {
+        toggleService(svc) {
+            const idx = this.form.needs_list.indexOf(svc);
+            if (idx > -1) {
+                this.form.needs_list.splice(idx, 1);
+            } else if (this.form.needs_list.length < 2) {
+                this.form.needs_list.push(svc);
+            }
+        },
         onPhoneInput(field, event) {
             this.form[field] = event.target.value.replace(/\D/g, '').slice(0, 10);
             if (field === 'phone') this.phoneError = '';
@@ -246,7 +283,8 @@ export default {
                 if (!this.form.address) { this.stepError = 'Home address is required.'; return false; }
             }
             if (this.currentStep === 1) {
-                if (this.form.needs_list.length === 0) { this.stepError = 'Please select at least one type of assistance needed.'; return false; }
+                if (this.form.needs_list.length === 0) { this.stepError = 'Please select at least one service.'; return false; }
+                if (this.form.needs_list.length > 2) { this.stepError = 'You can select a maximum of 2 services.'; return false; }
                 if (!this.form.situation_description) { this.stepError = 'Please briefly describe your situation.'; return false; }
                 const ee = this.validatePhone(this.form.emergency_contact_phone);
                 if (ee) { this.emergencyPhoneError = ee; this.stepError = 'Emergency contact: ' + ee; return false; }
@@ -259,6 +297,9 @@ export default {
         onPhotoSelect(event) { const file = event.target.files[0]; if (file) this.uploadPhoto(file); },
         onPhotoDrop(event) { this.photoDragging = false; const file = event.dataTransfer.files[0]; if (file) this.uploadPhoto(file); },
         removePhoto() { this.photoPreview = null; this.form_photo_filename = null; this.$refs.photoInput.value = ''; },
+        onDocSelect(event) { const file = event.target.files[0]; if (file) this.uploadDoc(file); },
+        onDocDrop(event) { this.docDragging = false; const file = event.dataTransfer.files[0]; if (file) this.uploadDoc(file); },
+        removeDoc() { this.docPreviewName = null; this.form_document_path = null; this.$refs.docInput.value = ''; },
         async uploadPhoto(file) {
             const allowed = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
             if (!allowed.includes(file.type)) { this.photoError = 'Invalid file type. Use JPG or PNG.'; return; }
@@ -272,10 +313,21 @@ export default {
             } catch (e) { this.photoError = e.response?.data?.error || 'Upload failed.'; this.photoPreview = null; }
             finally { this.photoUploading = false; }
         },
+        async uploadDoc(file) {
+            if (file.size > 5 * 1024 * 1024) { this.docError = 'File too large. Max 5 MB.'; return; }
+            this.docError = ''; this.docUploading = true;
+            this.docPreviewName = file.name;
+            const fd = new FormData(); fd.append('document', file);
+            try {
+                const res = await axios.post('/upload/document', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                this.form_document_path = res.data.filename;
+            } catch (e) { this.docError = e.response?.data?.error || 'Upload failed.'; this.docPreviewName = null; }
+            finally { this.docUploading = false; }
+        },
         async submitRegistration() {
             if (!this.validateStep()) return;
             this.submitting = true; this.submitError = '';
-            const payload = { ...this.form, needs: this.form.needs_list.join(', '), photo_filename: this.form_photo_filename };
+            const payload = { ...this.form, needs: this.form.needs_list.join(', '), photo_filename: this.form_photo_filename, document_path: this.form_document_path };
             try {
                 const res = await axios.post('/apply/beneficiary', payload);
                 this.submittedId = res.data.registration_id; this.submittedName = this.form.full_name;

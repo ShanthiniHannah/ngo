@@ -3,6 +3,7 @@ import { store } from '../store.js';
 export default {
     template: `
     <div class="portal-wrapper">
+        <daily-verse></daily-verse>
         <div class="portal-header">
             <h1>Welcome, {{ user.name }}</h1>
             <p class="subtitle">Employee Self-Service Portal</p>
@@ -11,7 +12,7 @@ export default {
         <!-- Profile Card -->
         <div class="portal-grid">
             <div class="card glass-card portal-card">
-                <div class="card-icon">E</div>
+                <div class="card-icon"><i data-lucide="user"></i></div>
                 <h3>My Profile</h3>
                 <div v-if="profile">
                     <p><strong>Employee ID:</strong> #{{ profile.employee_id }}</p>
@@ -24,7 +25,7 @@ export default {
 
             <!-- Attendance Quick Card -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">AT</div>
+                <div class="card-icon"><i data-lucide="calendar"></i></div>
                 <h3>Today's Attendance</h3>
                 <div v-if="todayAttendance">
                     <p>Status: <span :class="'status-badge status-' + todayAttendance.status.toLowerCase()">{{ todayAttendance.status }}</span><br>
@@ -40,7 +41,7 @@ export default {
 
             <!-- Leave Card -->
             <div class="card glass-card portal-card" style="grid-column: 1 / -1;">
-                <div class="card-icon">LV</div>
+                <div class="card-icon"><i data-lucide="calendar-off"></i></div>
                 <h3>My Leave Requests</h3>
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <span class="muted">Pending: <strong>{{ pendingLeaves }}</strong></span>
@@ -65,7 +66,7 @@ export default {
 
             <!-- Projects Card -->
             <div class="card glass-card portal-card">
-                <div class="card-icon">P</div>
+                <div class="card-icon"><i data-lucide="folder-kanban"></i></div>
                 <h3>Active Projects</h3>
                 <p><strong>{{ activeProjects }}</strong> projects currently running</p>
                 <router-link to="/projects" class="btn btn-secondary">View Projects</router-link>
@@ -118,6 +119,10 @@ export default {
     },
     async mounted() {
         await Promise.all([this.fetchProfile(), this.fetchAttendance(), this.fetchLeaves(), this.fetchProjects()]);
+        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+    },
+    updated() {
+        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
     },
     methods: {
         async fetchProfile() {
