@@ -1,9 +1,11 @@
 from flask import Blueprint, request, jsonify
 from database import db
-from models import SpiritualGrowth, User, ActivityLog
+from models import SpiritualGrowth, User, ActivityLog, BibleVerse
 from .auth import token_required
 from helpers import log_activity
 from sqlalchemy import func
+import requests
+import datetime
 
 analytics_bp = Blueprint('analytics', __name__)
 
@@ -133,3 +135,43 @@ def get_dashboard_charts(current_user):
         'volunteer_trends': volunteer_trends,
         'year': current_year
     })
+
+@analytics_bp.route('/bible-verse/daily', methods=['GET'])
+def get_daily_bible_verse():
+    """
+    Returns a Bible verse. 
+    Priority: Online API (ourmanna.com)
+    Fallback: Local MySQL database (seeding/rotation)
+    """
+    # 1. Try Online API first
+    try:
+        response = requests.get("https://beta.ourmanna.com/api/v1/get?format=json&order=daily", timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            # API format: {"verse": {"details": {"text": "...", "reference": "...", "version": "..."}}}
+            v = data.get('verse', {}).get('details', {})
+            if v.get('text') and v.get('reference'):
+                return jsonify({
+                    'text': v['text'].strip(),
+                    'reference': v['reference']
+                })
+    except Exception as e:
+        print(f"Online Bible API failed, falling back to database: {e}")
+
+    # 2. Local Fallback (MySQL)
+    try:
+        verses = BibleVerse.query.all()
+        if not verses:
+            return jsonify({
+                'text': "Your word is a lamp to my feet and a light to my path.",
+                'reference': "Psalm 119:105"
+            })
+            
+        now = datetime.datetime.utcnow()
+        start = datetime.datetime(now.year, 1, 1)
+        day_of_year = (now - start).days
+        
+        verse = verses[day_of_year % len(verses)]
+        return jsonify(verse.to_dict())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

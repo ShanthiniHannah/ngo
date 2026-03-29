@@ -8,6 +8,14 @@ instance/
 *.db
 ngo.db
 
+# Deployment artifacts
+deployment.zip
+*.zip
+
+# PowerPoint / Office temp files
+*.pptx
+~$*.pptx
+
 # ML model & generated data (included for deployment)
 # ml_model/model.pkl
 # ml_model/dataset.csv

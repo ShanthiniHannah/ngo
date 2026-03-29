@@ -133,37 +133,28 @@ export default {
     </div>
     `,
     setup() {
-        const verses = [
-            { text: "For I know the plans I have for you, plans to prosper you and not to harm you, plans to give you hope and a future.", ref: "Jeremiah 29:11" },
-            { text: "I can do all things through him who strengthens me.", ref: "Philippians 4:13" },
-            { text: "Trust in the LORD with all your heart, and do not lean on your own understanding.", ref: "Proverbs 3:5" },
-            { text: "The LORD is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-            { text: "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control.", ref: "Galatians 5:22-23" },
-            { text: "Be strong and courageous. Do not be frightened, and do not be dismayed, for the LORD your God is with you wherever you go.", ref: "Joshua 1:9" },
-            { text: "Come to me, all who labor and are heavy laden, and I will give you rest.", ref: "Matthew 11:28" },
-            { text: "And we know that for those who love God all things work together for good.", ref: "Romans 8:28" },
-            { text: "Rejoice always, pray without ceasing, give thanks in all circumstances.", ref: "1 Thessalonians 5:16-18" },
-            { text: "But they who wait for the LORD shall renew their strength; they shall mount up with wings like eagles.", ref: "Isaiah 40:31" },
-            { text: "Let all that you do be done in love.", ref: "1 Corinthians 16:14" },
-            { text: "Jesus Christ is the same yesterday and today and forever.", ref: "Hebrews 13:8" },
-            { text: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7" },
-            { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
-            { text: "If God is for us, who can be against us?", ref: "Romans 8:31" },
-            { text: "The steadfast love of the LORD never ceases; his mercies never come to an end.", ref: "Lamentations 3:22" }
-        ];
+        const dailyVerse = Vue.ref({
+            text: "Loading inspiring word...",
+            ref: "..."
+        });
 
-        const getDailyVerse = () => {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
-            const oneDay = 1000 * 60 * 60 * 24;
-            const dayOfYear = Math.floor(diff / oneDay);
-            return verses[dayOfYear % verses.length];
+        const fetchDailyVerse = async () => {
+            try {
+                const res = await fetch('/api/bible-verse/daily');
+                const data = await res.json();
+                if (data.text) {
+                    dailyVerse.value = {
+                        text: data.text,
+                        ref: data.reference
+                    };
+                }
+            } catch (err) {
+                console.error("Failed to fetch verse:", err);
+            }
         };
 
-        const dailyVerse = Vue.ref(getDailyVerse());
-
         Vue.onMounted(() => {
+            fetchDailyVerse();
             if (window.lucide) {
                 window.lucide.createIcons();
             }

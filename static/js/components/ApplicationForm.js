@@ -60,8 +60,7 @@ export default {
                         <div class="photo-upload-box"
                             :class="{'photo-upload-box--hover': photoDragging, 'photo-upload-box--done': photoPreview}"
                             @dragover.prevent="photoDragging=true" @dragleave="photoDragging=false"
-                            @drop.prevent="onPhotoDrop($event)" @click="$refs.photoInput.click()"
-                            style="border:2px dashed #a5b4fc;border-radius:16px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(99,102,241,.04);">
+                            @drop.prevent="onPhotoDrop($event)" @click="$refs.photoInput.click()">
                             <input ref="photoInput" type="file" accept="image/*" style="display:none" @change="onPhotoSelect">
                             <div v-if="!photoPreview"><div style="font-size:2.5rem;"></div><p style="margin:.5rem 0 0;color:#64748b;font-size:.9rem;">Click or drag &amp; drop a photo here</p></div>
                             <div v-else style="position:relative;display:inline-block;">

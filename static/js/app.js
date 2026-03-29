@@ -130,6 +130,7 @@ const app = createApp({
             return p === '/login' || p === '/apply' || p === '/apply/beneficiary';
         });
         const isSidebarCollapsed = Vue.ref(false);
+        const isMobileMenuOpen = Vue.ref(false);
 
         const logout = () => {
             store.clearUser();
@@ -139,6 +140,15 @@ const app = createApp({
         const toggleSidebar = () => {
             isSidebarCollapsed.value = !isSidebarCollapsed.value;
         };
+
+        const toggleMobileMenu = () => {
+            isMobileMenuOpen.value = !isMobileMenuOpen.value;
+        };
+
+        // Close mobile menu on route change
+        router.afterEach(() => {
+            isMobileMenuOpen.value = false;
+        });
 
         // After login, redirect to role-appropriate home
         const handleLoginSuccess = (userData, token) => {
@@ -164,19 +174,38 @@ const app = createApp({
             logout,
             isLoginPage,
             isSidebarCollapsed,
+            isMobileMenuOpen,
             toggleSidebar,
+            toggleMobileMenu,
             handleLoginSuccess,
         };
     },
     template: `
     <div class="app-wrapper">
         <toast-notifications />
+        
         <template v-if="!isLoginPage">
+            <!-- Mobile Header -->
+            <header class="mobile-header">
+                <button class="mobile-toggle" @click="toggleMobileMenu">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="mobile-brand">
+                    <span>ArcMission</span>
+                </div>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </header>
+
+            <!-- Sidebar Overlay -->
+            <div class="sidebar-overlay" :class="{ 'active': isMobileMenuOpen }" @click="toggleMobileMenu"></div>
+
             <sidebar-component
                 :user="user"
                 :collapsed="isSidebarCollapsed"
+                :mobile-open="isMobileMenuOpen"
                 @logout="logout"
                 @toggle-sidebar="toggleSidebar"
+                @close-mobile="toggleMobileMenu"
             />
             <main class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
                 <router-view @login-success="handleLoginSuccess" />

@@ -2,14 +2,17 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <aside class="sidebar" :class="{ 'collapsed': collapsed }">
+    <aside class="sidebar" :class="{ 'collapsed': collapsed, 'mobile-open': mobileOpen }">
         <div class="sidebar-header">
             <div class="logo-container" @click="toggleCollapse" title="Toggle Sidebar">
                  <img src="/static/img/logo.png" alt="NGO" class="sidebar-logo">
                  <span class="brand-name" v-if="!collapsed">ArcMission</span>
-                 <span v-if="!collapsed" class="toggle-icon"><i data-lucide="chevron-left"></i></span>
-                 <span v-else class="toggle-icon"><i data-lucide="chevron-right"></i></span>
+                 <span v-if="!collapsed" class="toggle-icon desktop-only"><i data-lucide="chevron-left"></i></span>
+                 <span v-else class="toggle-icon desktop-only"><i data-lucide="chevron-right"></i></span>
             </div>
+            <button class="mobile-close-btn" @click="$emit('close-mobile')">
+                <i data-lucide="x"></i>
+            </button>
         </div>
 
         <!-- Role Badge -->
@@ -182,7 +185,7 @@ export default {
         </div>
     </aside>
     `,
-    props: ['user', 'collapsed'],
+    props: ['user', 'collapsed', 'mobileOpen'],
     data() { return { pendingCount: 0 }; },
     emits: ['logout', 'toggle-sidebar'],
     computed: {

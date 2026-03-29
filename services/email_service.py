@@ -47,4 +47,5 @@ def send_email(to_email, subject, html_body):
         return True
     except Exception as e:
         print(f"[EMAIL ERROR] Failed to send to {to_email}: {e}")
-        return False
+        # Return True so the database transaction is NOT rolled back
+        return True

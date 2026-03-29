@@ -2,10 +2,10 @@ import { store } from '../store.js';
 
 export default {
     template: `
-    <div class="glass-container" style="padding: 2rem;">
+    <div class="glass-container">
         <h2 style="margin-bottom: 2rem;">Analytics & Insights</h2>
         
-        <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+        <div class="analytics-grid">
             
             <!-- Donation Trends Section -->
             <div class="card glass-card">
